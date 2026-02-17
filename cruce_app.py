@@ -10,7 +10,7 @@ class CruceApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Cruce ARBA-AGIP")
-        self.root.geometry("1250x750")
+        self.root.geometry("1300x800")
         
         self.db_path = "cruce_data.db"
         self.init_db()
@@ -18,6 +18,14 @@ class CruceApp:
         self.archivo_actual = None
         self.dark_mode = False
         self.ok_este_cruce = []
+        self.cruces_staged = []
+        
+        # Nuevas variables para sistema de pending y selección
+        self.selected_ret_ids = set()
+        self.selected_plat_ids = set()
+        self.ret_pending_map = {}
+        self.plat_pending_map = {}
+        
         self.setup_ui()
         self.actualizar_estadisticas()
         
@@ -46,32 +54,39 @@ class CruceApp:
         conn.close()
     
     def setup_ui(self):
+        # Colores tipo Instagram
         self.colors = {
-            'bg': '#f5f5f5', 'fg': '#333', 'header_bg': '#2c3e50',
-            'card_bg': '#fff', 'success': '#27ae60', 'warning': '#f39c12',
-            'danger': '#e74c3c', 'primary': '#3498db'
+            'bg': '#000000', 'fg': '#fafafa', 'header_bg': '#000000',
+            'card_bg': '#121212', 'card_fg': '#fafafa',
+            'success': '#00d26a', 'warning': '#ffb700',
+            'danger': '#ed4956', 'primary': '#0095f6',
+            'accent': '#E1306C', 'surface': '#262626'
         }
         
         self.root.configure(bg=self.colors['bg'])
         
+        # Header
         header = tk.Frame(self.root, bg=self.colors['header_bg'], height=50)
         header.pack(fill=tk.X)
+        header.pack_propagate(False)
         
         tk.Label(header, text="CRUCE ARBA - AGIP", font=("Segoe UI", 14, "bold"),
-                bg=self.colors['header_bg'], fg='white').pack(side=tk.LEFT, padx=20)
+                bg=self.colors['header_bg'], fg='white').pack(side=tk.LEFT, padx=20, pady=10)
         
-        self.btn_theme = tk.Button(header, text="Oscuro", command=self.toggle_theme,
+        self.btn_theme = tk.Button(header, text="🌙", command=self.toggle_theme,
                 bg='#34495e', fg='white', relief=tk.FLAT, padx=10)
-        self.btn_theme.pack(side=tk.RIGHT, padx=20)
+        self.btn_theme.pack(side=tk.RIGHT, padx=20, pady=10)
         
         main = tk.Frame(self.root, bg=self.colors['bg'], padx=15, pady=15)
         main.pack(fill=tk.BOTH, expand=True)
         
+        # File selection
         file_frame = tk.LabelFrame(main, text="Seleccionar Archivo", bg=self.colors['card_bg'],
-                fg='#2c3e50', font=("Segoe UI", 10, "bold"), padx=10, pady=10)
+                fg=self.colors['card_fg'], font=("Segoe UI", 10, "bold"), padx=10, pady=10)
         file_frame.pack(fill=tk.X, pady=(0, 10))
         
-        self.entry = tk.Entry(file_frame, font=("Segoe UI", 10))
+        self.entry = tk.Entry(file_frame, font=("Segoe UI", 10), bg=self.colors['surface'], 
+                             fg=self.colors['fg'], insertbackground=self.colors['fg'])
         self.entry.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
         
         tk.Button(file_frame, text="Examinar", command=self.seleccionar_archivo,
@@ -81,18 +96,20 @@ class CruceApp:
                 bg=self.colors['success'], fg='white', relief=tk.FLAT,
                 font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=5)
         
-        # Stats con más detalle
+        tk.Button(file_frame, text="+ Manual", command=self.carga_manual,
+                bg=self.colors['warning'], fg='black', relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
+        
+        # Stats
         stats_frame = tk.LabelFrame(main, text="Estadísticas", bg=self.colors['card_bg'],
-                fg='#2c3e50', font=("Segoe UI", 10, "bold"), padx=15, pady=10)
+                fg=self.colors['card_fg'], font=("Segoe UI", 10, "bold"), padx=15, pady=10)
         stats_frame.pack(fill=tk.X, pady=(0, 10))
         
         self.lbl_stats = []
         labels = [
-            ("Pend. RETENCION:", "warning"),
+            ("Pend. RETIENCION:", "warning"),
             ("Pend. PLATAFORMA:", "warning"),
-            ("Pend. Totales:", "warning"),
-            ("OK Este Cruce:", "success"),
-            ("OK Históricos:", "primary"),
+            ("Pend. Totales:", "accent"),
+            ("OK Históricos:", "success"),
         ]
         
         for i, (text, color) in enumerate(labels):
@@ -101,51 +118,118 @@ class CruceApp:
             lbl.pack(side=tk.LEFT, padx=15)
             self.lbl_stats.append(lbl)
         
-        preview_frame = tk.LabelFrame(main, text="Vista Previa", bg=self.colors['card_bg'],
-                fg='#2c3e50', font=("Segoe UI", 10, "bold"), padx=10, pady=5)
-        preview_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        # Selección frame
+        sel_frame = tk.LabelFrame(main, text="Selección para Cruce (doble clic en filas)", 
+                bg=self.colors['card_bg'], fg=self.colors['card_fg'], 
+                font=("Segoe UI", 10, "bold"), padx=10, pady=5)
+        sel_frame.pack(fill=tk.X, pady=(0, 10))
         
-        cols = ("CUIT", "Monto RET", "Período", "Monto PLAT", "Estado")
-        self.tree = ttk.Treeview(preview_frame, columns=cols, show="headings", height=12)
+        self.lbl_sel_ret = tk.Label(sel_frame, text="RET: $0.00 (0)", 
+                font=("Segoe UI", 10, "bold"), bg=self.colors['primary'], fg="white", padx=10, pady=5)
+        self.lbl_sel_ret.pack(side=tk.LEFT, padx=20)
         
-        self.tree.heading("CUIT", text="CUIT")
-        self.tree.heading("Monto RET", text="Monto RET")
-        self.tree.heading("Período", text="Período")
-        self.tree.heading("Monto PLAT", text="Monto PLAT")
-        self.tree.heading("Estado", text="Estado")
+        self.lbl_sel_plat = tk.Label(sel_frame, text="PLAT: $0.00 (0)", 
+                font=("Segoe UI", 10, "bold"), bg=self.colors['success'], fg="white", padx=10, pady=5)
+        self.lbl_sel_plat.pack(side=tk.LEFT, padx=20)
         
-        self.tree.column("CUIT", width=130)
-        self.tree.column("Monto RET", width=110)
-        self.tree.column("Período", width=100)
-        self.tree.column("Monto PLAT", width=110)
-        self.tree.column("Estado", width=100)
+        self.lbl_diferencia = tk.Label(sel_frame, text="Dif: $0.00", 
+                font=("Segoe UI", 11, "bold"), bg=self.colors['danger'], fg="white", padx=10, pady=5)
+        self.lbl_diferencia.pack(side=tk.LEFT, padx=20)
         
-        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        tk.Scrollbar(preview_frame, command=self.tree.yview).pack(side=tk.RIGHT, fill=tk.Y)
-        self.tree.configure(yscrollcommand=lambda f, l: self.tree.yview(f, l))
+        # Trees para RET y PLAT
+        from tkinter import PanedWindow
+        paned = PanedWindow(main, orient='horizontal', bg=self.colors['bg'])
+        paned.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
         
-        self.tree.tag_configure("OK", background="#d5f4e6")
-        self.tree.tag_configure("PENDIENTE", background="#fef9e7")
-        self.tree.tag_configure("VALIDADO", background="#d4edda")
-        self.tree.tag_configure("NO_VALIDADO", background="#f8d7da")
+        frame_ret = tk.Frame(paned, bg=self.colors['card_bg'])
+        frame_plat = tk.Frame(paned, bg=self.colors['card_bg'])
         
-        self.tree.bind("<Double-Button-1>", self.toggle_validacion)
+        tk.Label(frame_ret, text="📄 RETENCION (pendientes)", font=("Segoe UI", 11, "bold"),
+                bg=self.colors['primary'], fg="white", pady=5).pack(fill=tk.X)
+        tk.Label(frame_plat, text="📄 PLATAFORMA (pendientes)", font=("Segoe UI", 11, "bold"),
+                bg=self.colors['success'], fg="white", pady=5).pack(fill=tk.X)
         
+        cols = ("CUIT", "Monto", "Período")
+        self.tree_ret = ttk.Treeview(frame_ret, columns=cols, show="headings", height=12)
+        self.tree_plat = ttk.Treeview(frame_plat, columns=cols, show="headings", height=12)
+        
+        for col in cols:
+            self.tree_ret.heading(col, text=col)
+            self.tree_ret.column(col, width=140 if col == "CUIT" else 120)
+            self.tree_plat.heading(col, text=col)
+            self.tree_plat.column(col, width=140 if col == "CUIT" else 120)
+        
+        self.tree_ret.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(5,2), pady=5)
+        self.tree_plat.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(2,5), pady=5)
+        
+        self.tree_ret.tag_configure("SEL", background="#d4edda")
+        self.tree_plat.tag_configure("SEL", background="#d4edda")
+
+        self.tree_ret.bind("<Double-1>", lambda e: self.toggle_bd_selection('ret'))
+        self.tree_plat.bind("<Double-1>", lambda e: self.toggle_bd_selection('plat'))
+        
+        scroll_ret = tk.Scrollbar(frame_ret, orient=tk.VERTICAL, command=self.tree_ret.yview)
+        scroll_ret.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree_ret.configure(yscrollcommand=scroll_ret.set)
+        
+        scroll_plat = tk.Scrollbar(frame_plat, orient=tk.VERTICAL, command=self.tree_plat.yview)
+        scroll_plat.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree_plat.configure(yscrollcommand=scroll_plat.set)
+        
+        paned.add(frame_ret, minsize=500)
+        paned.add(frame_plat, minsize=500)
+        
+        # Staging panel
+        staging_frame = tk.LabelFrame(main, text="Staging de Cruces (Cartesiano)", 
+                bg=self.colors['card_bg'], fg=self.colors['card_fg'], 
+                font=("Segoe UI", 10, "bold"), padx=10, pady=5)
+        staging_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        cols_staging = ("RET_ID", "PLAT_ID", "CUIT_RET", "CUIT_PLAT", "MONTO_RET", "MONTO_PLAT", 
+                       "PERIODO_RET", "PERIODO_PLAT")
+        self.tree_staging = ttk.Treeview(staging_frame, columns=cols_staging, show="headings", height=5)
+        
+        for col in cols_staging:
+            self.tree_staging.heading(col, text=col)
+            self.tree_staging.column(col, width=100 if 'ID' in col else 120)
+        
+        self.tree_staging.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        scroll_staging = tk.Scrollbar(staging_frame, orient=tk.VERTICAL, command=self.tree_staging.yview)
+        scroll_staging.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree_staging.configure(yscrollcommand=scroll_staging.set)
+        
+        # Botones staging
+        staging_btn_frame = tk.Frame(staging_frame, bg=self.colors['card_bg'])
+        staging_btn_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=5)
+        
+        tk.Button(staging_btn_frame, text="Generar Staging", command=self.generate_cartesian_staging,
+                bg="#9b59b6", fg='white', relief=tk.FLAT, padx=10, pady=5).pack(fill=tk.X, pady=2)
+        
+        tk.Button(staging_btn_frame, text="Confirmar Staged", command=self.confirmar_estaged,
+                bg=self.colors['success'], fg='white', relief=tk.FLAT, padx=10, pady=5).pack(fill=tk.X, pady=2)
+        
+        tk.Button(staging_btn_frame, text="Limpiar Staging", command=self.limpiar_staging,
+                bg=self.colors['danger'], fg='white', relief=tk.FLAT, padx=10, pady=5).pack(fill=tk.X, pady=2)
+        
+        # Botones principales
         btn_frame = tk.Frame(main, bg=self.colors['bg'])
         btn_frame.pack(fill=tk.X, pady=5)
         
-        tk.Label(btn_frame, text="Doble clic en fila para validar/invalidar", 
-                bg=self.colors['bg'], fg='#666', font=("Segoe UI", 9)).pack(side=tk.LEFT, padx=10)
+        tk.Button(btn_frame, text="Cargar Pendientes BD", command=self.load_pending_from_bd, 
+                 bg=self.colors['primary'], fg='white', relief=tk.FLAT, padx=12, pady=6).pack(side=tk.LEFT, padx=5)
         
-        for text, cmd, color in [
-            ("Confirmar Validados", self.confirmar, self.colors['success']),
-            ("Exportar Este Cruce", self.exportar_este, self.colors['primary']),
-            ("Exportar Históricos", self.exportar_historicos, self.colors['primary']),
-            ("Ver Pendientes", self.ver_pendientes, self.colors['warning']),
-            ("Limpiar BD", self.limpiar_bd, self.colors['danger'])
-        ]:
-            tk.Button(btn_frame, text=text, command=cmd, bg=color, fg='white',
-                    relief=tk.FLAT, padx=10, pady=5).pack(side=tk.LEFT, padx=3)
+        tk.Button(btn_frame, text="Auto-Match", command=self.auto_match, 
+                 bg="#16a085", fg='white', relief=tk.FLAT, padx=12, pady=6).pack(side=tk.LEFT, padx=5)
+        
+        tk.Button(btn_frame, text="Exportar Históricos", command=self.exportar_historicos,
+                bg=self.colors['primary'], fg='white', relief=tk.FLAT, padx=15, pady=8).pack(side=tk.LEFT, padx=5)
+        
+        tk.Button(btn_frame, text="Ver Pendientes", command=self.ver_pendientes,
+                bg=self.colors['warning'], fg='black', relief=tk.FLAT, padx=15, pady=8).pack(side=tk.LEFT, padx=5)
+        
+        tk.Button(btn_frame, text="Limpiar BD", command=self.limpiar_bd,
+                bg=self.colors['danger'], fg='white', relief=tk.FLAT, padx=15, pady=8).pack(side=tk.RIGHT, padx=5)
     
     def toggle_theme(self):
         if self.dark_mode:
@@ -175,11 +259,10 @@ class CruceApp:
         
         conn.close()
         
-        self.lbl_stats[0].config(text=f"Pend. RETENCION: {pend_ret}")
+        self.lbl_stats[0].config(text=f"Pend. RETIENCION: {pend_ret}")
         self.lbl_stats[1].config(text=f"Pend. PLATAFORMA: {pend_plat}")
         self.lbl_stats[2].config(text=f"Pend. Totales: {pend_total}")
-        self.lbl_stats[3].config(text=f"OK Este Cruce: {len(self.ok_este_cruce)}")
-        self.lbl_stats[4].config(text=f"OK Históricos: {ok_historicos}")
+        self.lbl_stats[3].config(text=f"OK Históricos: {ok_historicos}")
     
     def seleccionar_archivo(self):
         f = filedialog.askopenfilename(filetypes=[("Excel", "*.xlsx *.xls")])
@@ -235,320 +318,12 @@ class CruceApp:
             conn.commit()
             conn.close()
             
-            self.mostrar_preview()
+            messagebox.showinfo("OK", "Datos cargados. Use 'Cargar Pendientes BD' para verlos.")
             
         except Exception as e:
             messagebox.showerror("Error", str(e))
     
-    def mostrar_preview(self):
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        
-        conn = sqlite3.connect(self.db_path)
-        ret = pd.read_sql("SELECT * FROM ingresos WHERE fuente='RETIENCION' AND conciliado=0", conn)
-        plat = pd.read_sql("SELECT * FROM ingresos WHERE fuente='PLATAFORMA' AND conciliado=0", conn)
-        
-        ok = 0
-        matched_ret = set()
-        matched_plat = set()
-        
-        self.ok_este_cruce = []
-        self.ok_seleccionados = []
-        
-        for _, r in ret.iterrows():
-            m = plat[(plat['cuit'] == r['cuit']) & (abs(plat['monto'] - r['monto']) < 0.01)]
-            if not m.empty:
-                p = m.iloc[0]
-                id_plat = int(p['id'])
-                id_ret = int(r['id'])
-                
-                ok += 1
-                matched_ret.add(id_ret)
-                matched_plat.add(id_plat)
-                
-                item_data = {
-                    'id_ret': id_ret, 'id_plat': id_plat,
-                    'cuit': r['cuit'], 'monto': r['monto'],
-                    'periodo_ret': r['periodo'], 'periodo_plat': p['periodo'],
-                    'razon_ret': str(r.get('razon_social', '')), 'razon_plat': str(p.get('razon_social', '')),
-                    'archivo_ret': r.get('archivo_origen', ''), 'archivo_plat': p.get('archivo_origen', '')
-                }
-                self.ok_este_cruce.append(item_data)
-                self.ok_seleccionados.append(item_data)
-                
-                self.tree.insert('', tk.END, values=(
-                    r['cuit'],
-                    f"{r['monto']:,.2f}",
-                    r['periodo'],
-                    f"{p['monto']:,.2f}",
-                    "✓ OK"
-                ), tags=("VALIDADO",))
-        
-        for _, r in ret.iterrows():
-            if r['id'] not in matched_ret:
-                self.tree.insert('', tk.END, values=(
-                    r['cuit'],
-                    f"{r['monto']:,.2f}",
-                    r['periodo'],
-                    "—",
-                    "PENDIENTE"
-                ), tags=("PENDIENTE",))
-        
-        for _, p in plat.iterrows():
-            if p['id'] not in matched_plat:
-                self.tree.insert('', tk.END, values=(
-                    p['cuit'],
-                    "—",
-                    p['periodo'],
-                    f"{p['monto']:,.2f}",
-                    "PENDIENTE"
-                ), tags=("PENDIENTE",))
-        
-        conn.close()
-        self.actualizar_estadisticas()
-        
-        if ok > 0:
-            messagebox.showinfo("Cruces Detectados", 
-                f"Se encontraron {ok} coincidencias.\n\n"
-                f"Doble clic en fila para quitar del cruce.")
-        else:
-            messagebox.showinfo("Sin Cruces", "No se encontraron coincidencias.")
-    
-    def mostrar_ventana_cruces(self):
-        top = tk.Toplevel(self.root)
-        top.title("Conciliación de Cruces")
-        top.geometry("1100x600")
-        
-        header = tk.Frame(top, bg="#2c3e50", height=40)
-        header.pack(fill=tk.X)
-        tk.Label(header, text="VERIFICACIÓN DE CRUCES", font=("Segoe UI", 12, "bold"),
-                bg="#2c3e50", fg="white").pack(pady=8)
-        
-        tk.Label(top, text="Doble clic en fila para validar/invalidar | Verde = OK, Rojo = Quitar",
-                fg="#666", font=("Segoe UI", 9)).pack(pady=5)
-        
-        paned = tk.PanedWindow(top, orient=tk.HORIZONTAL)
-        paned.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        frame_ret = tk.Frame(paned)
-        frame_plat = tk.Frame(paned)
-        
-        tk.Label(frame_ret, text="📄 RETENCION", font=("Segoe UI", 11, "bold"),
-                bg="#3498db", fg="white", pady=5).pack(fill=tk.X)
-        tk.Label(frame_plat, text="📄 PLATAFORMA", font=("Segoe UI", 11, "bold"),
-                bg="#27ae60", fg="white", pady=5).pack(fill=tk.X)
-        
-        cols = ("CUIT", "Monto", "Período", "R.Soc")
-        tree_ret = ttk.Treeview(frame_ret, columns=cols, show="headings", height=18)
-        tree_plat = ttk.Treeview(frame_plat, columns=cols, show="headings", height=18)
-        
-        for col in cols:
-            tree_ret.heading(col, text=col)
-            tree_ret.column(col, width=130 if col != "R.Soc" else 150)
-            tree_plat.heading(col, text=col)
-            tree_plat.column(col, width=130 if col != "R.Soc" else 150)
-        
-        tree_ret.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(5,2), pady=5)
-        tree_plat.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(2,5), pady=5)
-        
-        tree_ret.tag_configure("VALIDADO", background="#d4edda")
-        tree_ret.tag_configure("NO_VALIDADO", background="#f8d7da")
-        
-        item_map = {}
-        
-        for item_data in self.ok_este_cruce:
-            item_ret = tree_ret.insert('', tk.END, values=(
-                item_data['cuit'],
-                f"{item_data['monto']:,.2f}",
-                item_data['periodo_ret'],
-                item_data['razon_ret'][:25] if item_data['razon_ret'] else ''
-            ), tags=("VALIDADO",))
-            
-            item_plat = tree_plat.insert('', tk.END, values=(
-                item_data['cuit'],
-                f"{item_data['monto']:,.2f}",
-                item_data['periodo_plat'],
-                item_data['razon_plat'][:25] if item_data['razon_plat'] else ''
-            ), tags=("VALIDADO",))
-            
-            item_map[item_ret] = {'item_plat': item_plat, 'data': item_data}
-        
-        def on_double_click(event):
-            tree = event.widget
-            item_id = tree.focus()
-            if not item_id or item_id not in item_map:
-                return
-            
-            current_tags = tree.item(item_id, "tags")
-            
-            if "VALIDADO" in current_tags:
-                tree.item(item_id, tags=("NO_VALIDADO",))
-                other_tree = tree_plat if tree == tree_ret else tree_ret
-                other_item = item_map[item_id]['item_plat']
-                other_tree.item(other_item, tags=("NO_VALIDADO",))
-                
-                if item_map[item_id]['data'] in self.ok_seleccionados:
-                    self.ok_seleccionados.remove(item_map[item_id]['data'])
-            else:
-                tree.item(item_id, tags=("VALIDADO",))
-                other_tree = tree_plat if tree == tree_ret else tree_ret
-                other_item = item_map[item_id]['item_plat']
-                other_tree.item(other_item, tags=("VALIDADO",))
-                
-                if item_map[item_id]['data'] not in self.ok_seleccionados:
-                    self.ok_seleccionados.append(item_map[item_id]['data'])
-            
-            self.actualizar_estadisticas()
-        
-        tree_ret.bind("<Double-Button-1>", on_double_click)
-        tree_plat.bind("<Double-Button-1>", on_double_click)
-        
-        scroll_ret = ttk.Scrollbar(frame_ret, orient=tk.VERTICAL, command=tree_ret.yview)
-        scroll_ret.pack(side=tk.RIGHT, fill=tk.Y)
-        tree_ret.configure(yscrollcommand=scroll_ret.set)
-        
-        scroll_plat = ttk.Scrollbar(frame_plat, orient=tk.VERTICAL, command=tree_plat.yview)
-        scroll_plat.pack(side=tk.RIGHT, fill=tk.Y)
-        tree_plat.configure(yscrollcommand=scroll_plat.set)
-        
-        paned.add(frame_ret, minsize=450)
-        paned.add(frame_plat, minsize=450)
-        
-        btn_frame = tk.Frame(top, pady=10)
-        btn_frame.pack(fill=tk.X)
-        
-        tk.Button(btn_frame, text="✓ Confirmar Validados", command=lambda: self.confirmar_desde_ventana(top),
-                bg="#27ae60", fg="white", relief=tk.FLAT, padx=20, pady=8,
-                font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=10)
-        
-        tk.Button(btn_frame, text="✗ Cancelar", command=top.destroy,
-                bg="#e74c3c", fg="white", relief=tk.FLAT, padx=20, pady=8).pack(side=tk.LEFT, padx=10)
-        
-        self.ventana_cruces = top
-        self.tree_ret = tree_ret
-        self.tree_plat = tree_plat
-        self.item_map = item_map
-    
-    def confirmar_desde_ventana(self, ventana):
-        if not self.ok_seleccionados:
-            messagebox.showinfo("Info", "No hay cruces validados para confirmar")
-            return
-        
-        if not messagebox.askyesno("Confirmar", f"¿Confirmar {len(self.ok_seleccionados)} cruces validados?"):
-            return
-        
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        archivo = os.path.basename(self.archivo_actual) if self.archivo_actual else "unknown"
-        
-        for item in self.ok_seleccionados:
-            c.execute('''INSERT INTO cruces_ok 
-                (id_retencion, id_plataforma, cuit, monto, periodo_ret, periodo_plat,
-                 razon_social_ret, razon_social_plat, fecha_conciliado, archivo_origen)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (item['id_ret'], item['id_plat'], item['cuit'], item['monto'],
-                 item['periodo_ret'], item['periodo_plat'], item['razon_ret'],
-                 item['razon_plat'], fecha, archivo))
-            
-            c.execute("UPDATE ingresos SET conciliado=1, fecha_conciliado=? WHERE id=?", (fecha, item['id_ret']))
-            c.execute("UPDATE ingresos SET conciliado=1, fecha_conciliado=? WHERE id=?", (fecha, item['id_plat']))
-        
-        conn.commit()
-        conn.close()
-        
-        ventana.destroy()
-        self.ok_este_cruce = []
-        self.ok_seleccionados = []
-        self.mostrar_preview()
-        self.actualizar_estadisticas()
-        messagebox.showinfo("Confirmado", "Cruces guardados en histórico")
-    
-    def toggle_validacion(self, event):
-        item_id = self.tree.focus()
-        if not item_id:
-            return
-        
-        current_tags = self.tree.item(item_id, "tags")
-        current_vals = self.tree.item(item_id, "values")
-        
-        if "VALIDADO" in current_tags:
-            self.tree.item(item_id, tags=("NO_VALIDADO",))
-            self.tree.item(item_id, values=(current_vals[0], current_vals[1], "✗ QUITAR", current_vals[3]))
-            for item in self.ok_este_cruce:
-                if item['item_id'] == item_id:
-                    if item in self.ok_seleccionados:
-                        self.ok_seleccionados.remove(item)
-                    break
-        else:
-            self.tree.item(item_id, tags=("VALIDADO",))
-            self.tree.item(item_id, values=(current_vals[0], current_vals[1], "✓ VALIDADO", current_vals[3]))
-            for item in self.ok_este_cruce:
-                if item['item_id'] == item_id:
-                    if item not in self.ok_seleccionados:
-                        self.ok_seleccionados.append(item)
-                    break
-        
-        self.actualizar_estadisticas()
-    
-    def confirmar(self):
-        if not self.ok_seleccionados:
-            messagebox.showinfo("Info", "No hay cruces validados para confirmar")
-            return
-        
-        if not messagebox.askyesno("Confirmar", f"¿Confirmar {len(self.ok_seleccionados)} cruces validados?"):
-            return
-        
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        archivo = os.path.basename(self.archivo_actual) if self.archivo_actual else "unknown"
-        
-        for item in self.ok_seleccionados:
-            c.execute('''INSERT INTO cruces_ok 
-                (id_retencion, id_plataforma, cuit, monto, periodo_ret, periodo_plat,
-                 razon_social_ret, razon_social_plat, fecha_conciliado, archivo_origen)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (item['id_ret'], item['id_plat'], item['cuit'], item['monto'],
-                 item['periodo_ret'], item['periodo_plat'], item['razon_ret'],
-                 item['razon_plat'], fecha, archivo))
-            
-            c.execute("UPDATE ingresos SET conciliado=1, fecha_conciliado=? WHERE id=?", (fecha, item['id_ret']))
-            c.execute("UPDATE ingresos SET conciliado=1, fecha_conciliado=? WHERE id=?", (fecha, item['id_plat']))
-        
-        conn.commit()
-        conn.close()
-        
-        self.ok_este_cruce = []
-        self.ok_seleccionados = []
-        self.mostrar_preview()
-        self.actualizar_estadisticas()
-        messagebox.showinfo("Confirmado", "Cruces guardados en histórico")
-    
-    def exportar_este(self):
-        if not self.ok_este_cruce:
-            messagebox.showinfo("Info", "No hay cruces este cruce para exportar")
-            return
-        
-        data = []
-        for item in self.ok_este_cruce:
-            data.append({
-                'CUIT': item['cuit'],
-                'Monto': item['monto'],
-                'Período RETENCION': item['periodo_ret'],
-                'Período PLATAFORMA': item['periodo_plat'],
-                'Razón Social RET': item['razon_ret'],
-                'Razón Social PLAT': item['razon_plat'],
-                'Fecha': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            })
-        
-        df = pd.DataFrame(data)
-        
-        f = filedialog.asksaveasfilename(defaultextension=".xlsx",
-            initialfile=f"Cruce_Este_{datetime.now().strftime('%Y%m%d')}.xlsx")
-        if f:
-            df.to_excel(f, index=False)
-            messagebox.showinfo("OK", f"Exportado a {f}")
+
     
     def exportar_historicos(self):
         conn = sqlite3.connect(self.db_path)
@@ -655,10 +430,371 @@ class CruceApp:
             conn.commit()
             conn.close()
             self.ok_este_cruce = []
+            self.selected_ret_ids.clear()
+            self.selected_plat_ids.clear()
+            self.ret_pending_map.clear()
+            self.plat_pending_map.clear()
+            self.limpiar_trees()
             self.actualizar_estadisticas()
-            for item in self.tree.get_children():
-                self.tree.delete(item)
             messagebox.showinfo("OK", "Base de datos limpiada")
+    
+    def limpiar_trees(self):
+        for item in self.tree_ret.get_children():
+            self.tree_ret.delete(item)
+        for item in self.tree_plat.get_children():
+            self.tree_plat.delete(item)
+        for item in self.tree_staging.get_children():
+            self.tree_staging.delete(item)
+    
+    def carga_manual(self):
+        top = tk.Toplevel(self.root)
+        top.title("Carga Manual")
+        top.geometry("400x300")
+        top.configure(bg=self.colors['bg'])
+        
+        tk.Label(top, text="CARGA MANUAL", font=("Segoe UI", 12, "bold"),
+                bg=self.colors['bg'], fg=self.colors['fg']).pack(pady=10)
+        
+        frame = tk.Frame(top, bg=self.colors['bg'], padx=20, pady=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+        
+        tk.Label(frame, text="Fuente:", bg=self.colors['bg'], fg=self.colors['fg']).grid(row=0, column=0, sticky='w', pady=5)
+        combo_fuente = ttk.Combobox(frame, values=["RETIENCION", "PLATAFORMA"], state="readonly")
+        combo_fuente.grid(row=0, column=1, sticky='ew', pady=5)
+        combo_fuente.current(0)
+        
+        tk.Label(frame, text="CUIT:", bg=self.colors['bg'], fg=self.colors['fg']).grid(row=1, column=0, sticky='w', pady=5)
+        entry_cuit = tk.Entry(frame)
+        entry_cuit.grid(row=1, column=1, sticky='ew', pady=5)
+        
+        tk.Label(frame, text="Monto:", bg=self.colors['bg'], fg=self.colors['fg']).grid(row=2, column=0, sticky='w', pady=5)
+        entry_monto = tk.Entry(frame)
+        entry_monto.grid(row=2, column=1, sticky='ew', pady=5)
+        
+        tk.Label(frame, text="Período:", bg=self.colors['bg'], fg=self.colors['fg']).grid(row=3, column=0, sticky='w', pady=5)
+        entry_periodo = tk.Entry(frame)
+        entry_periodo.grid(row=3, column=1, sticky='ew', pady=5)
+        
+        tk.Label(frame, text="Razón Social:", bg=self.colors['bg'], fg=self.colors['fg']).grid(row=4, column=0, sticky='w', pady=5)
+        entry_razon = tk.Entry(frame)
+        entry_razon.grid(row=4, column=1, sticky='ew', pady=5)
+        
+        def guardar():
+            try:
+                conn = sqlite3.connect(self.db_path)
+                c = conn.cursor()
+                fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                c.execute('''INSERT INTO ingresos 
+                    (fuente, cuit, monto, periodo, razon_social, fecha_insert, archivo_origen)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                    (combo_fuente.get(), entry_cuit.get(), float(entry_monto.get()),
+                     entry_periodo.get(), entry_razon.get(), fecha, "MANUAL"))
+                conn.commit()
+                conn.close()
+                messagebox.showinfo("OK", "Registro guardado")
+                top.destroy()
+                self.actualizar_estadisticas()
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+        
+        btn_frame = tk.Frame(top, pady=15, bg=self.colors['bg'])
+        btn_frame.pack(fill=tk.X)
+        
+        tk.Button(btn_frame, text="Guardar", command=guardar,
+                bg=self.colors['success'], fg="white", relief=tk.FLAT, 
+                padx=20, pady=8).pack(side=tk.LEFT, padx=10)
+        
+        tk.Button(btn_frame, text="Cancelar", command=top.destroy,
+                bg=self.colors['danger'], fg="white", relief=tk.FLAT, 
+                padx=20, pady=8).pack(side=tk.LEFT, padx=10)
+    
+    def load_pending_from_bd(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+            
+            # Clear trees
+            for item in self.tree_ret.get_children():
+                self.tree_ret.delete(item)
+            for item in self.tree_plat.get_children():
+                self.tree_plat.delete(item)
+            self.ret_pending_map.clear()
+            self.plat_pending_map.clear()
+            
+            # Load RETENCION pending
+            ret = pd.read_sql("SELECT * FROM ingresos WHERE fuente='RETIENCION' AND conciliado=0", conn)
+            for _, r in ret.iterrows():
+                iid = self.tree_ret.insert('', tk.END, values=(
+                    str(r.get('cuit', '')),
+                    f"{float(r.get('monto', 0)):,.2f}",
+                    str(r.get('periodo', ''))
+                ))
+                self.ret_pending_map[iid] = {
+                    'id': int(r.get('id', 0)),
+                    'cuit': str(r.get('cuit', '')),
+                    'monto': float(r.get('monto', 0)),
+                    'periodo': str(r.get('periodo', '')),
+                    'razon': str(r.get('razon_social', '')),
+                    'archivo': str(r.get('archivo_origen', ''))
+                }
+            
+            # Load PLATAFORMA pending
+            plat = pd.read_sql("SELECT * FROM ingresos WHERE fuente='PLATAFORMA' AND conciliado=0", conn)
+            for _, p in plat.iterrows():
+                iid = self.tree_plat.insert('', tk.END, values=(
+                    str(p.get('cuit', '')),
+                    f"{float(p.get('monto', 0)):,.2f}",
+                    str(p.get('periodo', ''))
+                ))
+                self.plat_pending_map[iid] = {
+                    'id': int(p.get('id', 0)),
+                    'cuit': str(p.get('cuit', '')),
+                    'monto': float(p.get('monto', 0)),
+                    'periodo': str(p.get('periodo', '')),
+                    'razon': str(p.get('razon_social', '')),
+                    'archivo': str(p.get('archivo_origen', ''))
+                }
+            conn.close()
+            self.actualizar_estadisticas()
+            messagebox.showinfo("OK", f"Pendientes cargados: RET={len(self.ret_pending_map)}, PLAT={len(self.plat_pending_map)}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error cargando pendientes: {str(e)}")
+    
+    def toggle_bd_selection(self, side):
+        if side == 'ret':
+            tree = self.tree_ret
+            selected_set = self.selected_ret_ids
+            data_map = self.ret_pending_map
+        else:
+            tree = self.tree_plat
+            selected_set = self.selected_plat_ids
+            data_map = self.plat_pending_map
+        
+        item = tree.focus()
+        if not item:
+            return
+        
+        db_id = data_map.get(item, {}).get('id')
+        if not db_id:
+            return
+        
+        if db_id in selected_set:
+            selected_set.remove(db_id)
+            tree.item(item, tags=())
+        else:
+            selected_set.add(db_id)
+            tree.item(item, tags=('SEL',))
+        
+        self.update_totals()
+    
+    def update_totals(self):
+        ret_id_to_item = {v['id']: k for k, v in self.ret_pending_map.items()}
+        plat_id_to_item = {v['id']: k for k, v in self.plat_pending_map.items()}
+        
+        sum_ret = sum(
+            self.ret_pending_map[ret_id_to_item[db_id]]['monto']
+            for db_id in self.selected_ret_ids
+            if db_id in ret_id_to_item
+        )
+        sum_plat = sum(
+            self.plat_pending_map[plat_id_to_item[db_id]]['monto']
+            for db_id in self.selected_plat_ids
+            if db_id in plat_id_to_item
+        )
+        
+        diff = sum_ret - sum_plat
+        
+        self.lbl_sel_ret.config(text=f"RET: ${sum_ret:,.2f} ({len(self.selected_ret_ids)})")
+        self.lbl_sel_plat.config(text=f"PLAT: ${sum_plat:,.2f} ({len(self.selected_plat_ids)})")
+        
+        if abs(diff) <= 0.01:
+            self.lbl_diferencia.config(text=f"Dif: ${diff:,.2f} ✓", fg="#27ae60")
+        else:
+            self.lbl_diferencia.config(text=f"Dif: ${diff:,.2f}", fg="#ed4956")
+    
+    def generate_cartesian_staging(self):
+        if not self.selected_ret_ids or not self.selected_plat_ids:
+            messagebox.showwarning("Aviso", "Seleccione registros de AMBOS lados primero")
+            return
+        
+        self.limpiar_staging()
+        
+        ret_by_id = {v['id']: v for v in self.ret_pending_map.values()}
+        plat_by_id = {v['id']: v for v in self.plat_pending_map.values()}
+        
+        ret_item_by_dbid = {v['id']: k for k, v in self.ret_pending_map.items()}
+        plat_item_by_dbid = {v['id']: k for k, v in self.plat_pending_map.items()}
+        
+        count = 0
+        for ret_id in self.selected_ret_ids:
+            for plat_id in self.selected_plat_ids:
+                if ret_id in ret_by_id and plat_id in plat_by_id:
+                    r = ret_by_id[ret_id]
+                    p = plat_by_id[plat_id]
+                    self.tree_staging.insert('', tk.END, values=(
+                        ret_id, plat_id,
+                        r['cuit'], p['cuit'],
+                        f"{r['monto']:,.2f}", f"{p['monto']:,.2f}",
+                        r['periodo'], p['periodo']
+                    ))
+                    count += 1
+        
+        deleted_ret = 0
+        for db_id in list(self.selected_ret_ids):
+            if db_id in ret_item_by_dbid:
+                item_id = ret_item_by_dbid[db_id]
+                try:
+                    if self.tree_ret.exists(item_id):
+                        self.tree_ret.delete(item_id)
+                        deleted_ret += 1
+                except:
+                    pass
+                if item_id in self.ret_pending_map:
+                    del self.ret_pending_map[item_id]
+        
+        deleted_plat = 0
+        for db_id in list(self.selected_plat_ids):
+            if db_id in plat_item_by_dbid:
+                item_id = plat_item_by_dbid[db_id]
+                try:
+                    if self.tree_plat.exists(item_id):
+                        self.tree_plat.delete(item_id)
+                        deleted_plat += 1
+                except:
+                    pass
+                if item_id in self.plat_pending_map:
+                    del self.plat_pending_map[item_id]
+        
+        self.selected_ret_ids.clear()
+        self.selected_plat_ids.clear()
+        self.update_totals()
+        self.actualizar_estadisticas()
+        
+        messagebox.showinfo("OK", f"Staging generado: {count} cruces.\n"
+                          f"Eliminados: {deleted_ret} RET, {deleted_plat} PLAT.")
+    
+    def limpiar_staging(self):
+        for item in self.tree_staging.get_children():
+            self.tree_staging.delete(item)
+    
+    def confirmar_estaged(self):
+        items = self.tree_staging.get_children()
+        if not items:
+            messagebox.showwarning("Aviso", "No hay cruces staged para confirmar")
+            return
+        
+        if not messagebox.askyesno("Confirmar", f"¿Confirmar {len(items)} cruces staged?"):
+            return
+        
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        archivo = os.path.basename(self.archivo_actual) if self.archivo_actual else "unknown"
+        
+        confirmados = 0
+        for item in items:
+            vals = self.tree_staging.item(item, 'values')
+            ret_id = int(vals[0])
+            plat_id = int(vals[1])
+            cuit_ret = vals[2]
+            cuit_plat = vals[3]
+            monto_ret = float(vals[4].replace(',', ''))
+            monto_plat = float(vals[5].replace(',', ''))
+            periodo_ret = vals[6]
+            periodo_plat = vals[7]
+            
+            c.execute('''INSERT INTO cruces_ok 
+                (id_retencion, id_plataforma, cuit, monto, periodo_ret, periodo_plat,
+                 razon_social_ret, razon_social_plat, fecha_conciliado, archivo_origen)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (ret_id, plat_id, cuit_ret, monto_ret, periodo_ret, periodo_plat, 
+                 '', '', fecha, archivo))
+            
+            c.execute("UPDATE ingresos SET conciliado=1, fecha_conciliado=? WHERE id=?", (fecha, ret_id))
+            c.execute("UPDATE ingresos SET conciliado=1, fecha_conciliado=? WHERE id=?", (fecha, plat_id))
+            confirmados += 1
+        
+        conn.commit()
+        conn.close()
+        
+        self.limpiar_staging()
+        self.selected_ret_ids.clear()
+        self.selected_plat_ids.clear()
+        self.load_pending_from_bd()
+        self.actualizar_estadisticas()
+        
+        messagebox.showinfo("OK", f"{confirmados} cruces confirmados y guardados")
+    
+    def auto_match(self):
+        if not self.ret_pending_map or not self.plat_pending_map:
+            messagebox.showwarning("Aviso", "Primero cargue los pendientes desde BD")
+            return
+        
+        self.limpiar_staging()
+        
+        ret_by_cuit = {}
+        for item_id, data in self.ret_pending_map.items():
+            cuit = data['cuit']
+            if cuit not in ret_by_cuit:
+                ret_by_cuit[cuit] = []
+            ret_by_cuit[cuit].append({'item_id': item_id, **data})
+        
+        plat_by_cuit = {}
+        for item_id, data in self.plat_pending_map.items():
+            cuit = data['cuit']
+            if cuit not in plat_by_cuit:
+                plat_by_cuit[cuit] = []
+            plat_by_cuit[cuit].append({'item_id': item_id, **data})
+        
+        ret_matched_ids = set()
+        plat_matched_ids = set()
+        matches = []
+        
+        for cuit in ret_by_cuit:
+            if cuit in plat_by_cuit:
+                for ret_item in ret_by_cuit[cuit]:
+                    if ret_item['id'] in ret_matched_ids:
+                        continue
+                    for plat_item in plat_by_cuit[cuit]:
+                        if plat_item['id'] in plat_matched_ids:
+                            continue
+                        if abs(ret_item['monto'] - plat_item['monto']) <= 0.01:
+                            matches.append({
+                                'ret_id': ret_item['id'],
+                                'plat_id': plat_item['id'],
+                                'cuit': cuit,
+                                'monto_ret': ret_item['monto'],
+                                'monto_plat': plat_item['monto'],
+                                'periodo_ret': ret_item['periodo'],
+                                'periodo_plat': plat_item['periodo']
+                            })
+                            ret_matched_ids.add(ret_item['id'])
+                            plat_matched_ids.add(plat_item['id'])
+                            break
+        
+        for match in matches:
+            self.tree_staging.insert('', tk.END, values=(
+                match['ret_id'], match['plat_id'],
+                match['cuit'], match['cuit'],
+                f"{match['monto_ret']:,.2f}", f"{match['monto_plat']:,.2f}",
+                match['periodo_ret'], match['periodo_plat']
+            ))
+        
+        for item_id, data in list(self.ret_pending_map.items()):
+            if data['id'] in ret_matched_ids:
+                self.tree_ret.delete(item_id)
+                del self.ret_pending_map[item_id]
+        
+        for item_id, data in list(self.plat_pending_map.items()):
+            if data['id'] in plat_matched_ids:
+                self.tree_plat.delete(item_id)
+                del self.plat_pending_map[item_id]
+        
+        self.selected_ret_ids.clear()
+        self.selected_plat_ids.clear()
+        self.actualizar_estadisticas()
+        
+        messagebox.showinfo("Auto-Match", f"Se encontraron {len(matches)} coincidencias automáticas.\n"
+                          f"Quedan {len(self.ret_pending_map)} RET y {len(self.plat_pending_map)} PLAT pendientes.")
 
 if __name__ == "__main__":
     CruceApp()
