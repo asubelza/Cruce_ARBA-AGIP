@@ -17,8 +17,20 @@ env/
 # Ignore OS files
 .DS_Store
 Thumbs.db
+nul
 
 # Ignore IDE
 .idea/
 .vscode/
 *.swp
+
+# Node.js
+node_modules/
+dist/
+
+# MongoDB data
+mongodb_data/
+
+# Environment
+.env
+.env.local
