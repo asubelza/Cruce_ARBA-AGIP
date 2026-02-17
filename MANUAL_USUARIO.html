@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Usuario - Cruce ARBA-AGIP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #fff;
+        }
+        
+        .cover {
+            text-align: center;
+            padding: 60px 0;
+            border-bottom: 3px solid #0095f6;
+            margin-bottom: 40px;
+        }
+        
+        .cover h1 {
+            font-size: 2.5em;
+            color: #0095f6;
+            margin-bottom: 10px;
+        }
+        
+        .cover h2 {
+            font-size: 1.5em;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .cover .version {
+            margin-top: 30px;
+            color: #888;
+        }
+        
+        h2 {
+            color: #0095f6;
+            border-bottom: 2px solid #0095f6;
+            padding-bottom: 10px;
+            margin: 40px 0 20px 0;
+        }
+        
+        h3 {
+            color: #333;
+            margin: 25px 0 15px 0;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .tip {
+            background: #e3f2fd;
+            border-left: 4px solid #0095f6;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+        
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+        
+        .screenshot {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .screenshot-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+        }
+        
+        .step-number {
+            background: #0095f6;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #0095f6;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        @media print {
+            body {
+                padding: 20px;
+            }
+            
+            .cover {
+                padding: 40px 0;
+            }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #888;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="cover">
+        <h1>Cruce ARBA-AGIP</h1>
+        <h2>Manual de Usuario</h2>
+        <p class="version">Versión 1.0 - Febrero 2026</p>
+        <p class="version">Estudio Contable JY</p>
+    </div>
+    
+    <h2>1. Introducción</h2>
+    <p>
+        El sistema <strong>Cruce ARBA-AGIP</strong> es una aplicación web diseñada para conciliar retenciones entre los registros de ARBA y AGIP. Permite cargar archivos Excel con datos de ambas fuentes y realizar cruces automáticos o manuales para identificar coincidencias.
+    </p>
+    
+    <h3>1.1 Requisitos del Sistema</h3>
+    <ul>
+        <li>Navegador web moderno (Chrome, Firefox, Edge)</li>
+        <li>Conexión a internet (solo para acceso remoto)</li>
+        <li>Archivo Excel con formato específico (ver sección 3)</li>
+    </ul>
+    
+    <h3>1.2 Acceso al Sistema</h3>
+    <p>Abra su navegador web e ingrese la dirección proporcionada por el administrador:</p>
+    <div class="tip">
+        <strong>URL local:</strong> http://localhost<br>
+        <strong>URL remota:</strong> Consultar con el administrador del sistema
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <h2>2. Interfaz Principal</h2>
+    <p>Al acceder al sistema, verá la siguiente interfaz:</p>
+    
+    <div class="screenshot">
+        <div class="screenshot-label">Vista general de la aplicación</div>
+        <pre style="text-align: left; font-size: 0.9em;">
+┌─────────────────────────────────────────────────────────┐
+│  Cruce ARBA - AGIP                           [Header]   │
+├─────────────────────────────────────────────────────────┤
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │
+│  │ RET Pend│ │ PLAT Pend│ │ Total   │ │ Cruces  │       │
+│  │   21    │ │    12    │ │   33    │ │   20    │       │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘       │
+├─────────────────────────────────────────────────────────┤
+│  📁 Cargar Archivo Excel                                │
+│  [ Arrastre archivo aquí o haga clic para seleccionar ] │
+├─────────────────────────────────────────────────────────┤
+│  [Actualizar] [Auto-Match] [Cruce Manual] [Limpiar BD]  │
+├─────────────────────────────────────────────────────────┤
+│  ┌──────────────────┐  ┌──────────────────┐            │
+│  │   RETIENCION     │  │   PLATAFORMA     │            │
+│  │   [Tabla]        │  │   [Tabla]        │            │
+│  └──────────────────┘  └──────────────────┘            │
+└─────────────────────────────────────────────────────────┘
+        </pre>
+    </div>
+    
+    <h3>2.1 Tarjetas de Estadísticas</h3>
+    <table>
+        <tr>
+            <th>Tarjeta</th>
+            <th>Descripción</th>
+        </tr>
+        <tr>
+            <td>RETIENCION Pendientes</td>
+            <td>Cantidad de registros de retención sin conciliar</td>
+        </tr>
+        <tr>
+            <td>PLATAFORMA Pendientes</td>
+            <td>Cantidad de registros de plataforma sin conciliar</td>
+        </tr>
+        <tr>
+            <td>Total Pendientes</td>
+            <td>Suma total de registros pendientes</td>
+        </tr>
+        <tr>
+            <td>Cruces OK</td>
+            <td>Cantidad de cruces confirmados históricamente</td>
+        </tr>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <h2>3. Carga de Archivos Excel</h2>
+    
+    <h3>3.1 Formato del Archivo</h3>
+    <p>El archivo Excel debe contener las siguientes hojas:</p>
+    
+    <table>
+        <tr>
+            <th>Hoja</th>
+            <th>Columnas Requeridas</th>
+        </tr>
+        <tr>
+            <td>RETENCION (o RETIENCION)</td>
+            <td>CUIT, Importe, PERIODO TOMADO</td>
+        </tr>
+        <tr>
+            <td>PLATAFORMA</td>
+            <td>CUIT, Importe, PERIODO</td>
+        </tr>
+    </table>
+    
+    <div class="warning">
+        <strong>Importante:</strong> El sistema detecta automáticamente si la hoja se llama "RETENCION" o "RETIENCION" (con error tipográfico).
+    </div>
+    
+    <h3>3.2 Pasos para Cargar</h3>
+    
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <strong>Preparar el archivo</strong><br>
+            Asegúrese de que el archivo Excel tenga el formato correcto con las hojas y columnas requeridas.
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <strong>Arrastrar o seleccionar</strong><br>
+            Arrastre el archivo Excel sobre la zona de carga O haga clic en la zona para abrir el selector de archivos.
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <strong>Confirmar carga</strong><br>
+            El sistema procesará el archivo y mostrará la cantidad de registros cargados de cada hoja.
+        </div>
+    </div>
+    
+    <div class="tip">
+        Después de cargar, las tarjetas de estadísticas se actualizarán automáticamente mostrando la cantidad de registros pendientes.
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <h2>4. Auto-Match (Cruce Automático)</h2>
+    <p>El sistema puede detectar automáticamente coincidencias entre registros de RETENCION y PLATAFORMA basándose en:</p>
+    <ul>
+        <li><strong>CUIT:</strong> Debe ser idéntico</li>
+        <li><strong>Monto:</strong> Debe coincidir con tolerancia de $0.01</li>
+    </ul>
+    
+    <h3>4.1 Ejecutar Auto-Match</h3>
+    
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            Haga clic en el botón <strong>"Auto-Match"</strong> (color azul).
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            El sistema buscará coincidencias y mostrará una tabla con los resultados encontrados.
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <strong>Revise los resultados:</strong>
+            <ul>
+                <li>Cada fila muestra un match potencial</li>
+                <li>El indicador "OK" confirma que los montos coinciden</li>
+                <li>El indicador "DIF" advierte diferencia (dentro de tolerancia)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <h3>4.2 Seleccionar Matches</h3>
+    <p>Antes de confirmar, puede:</p>
+    <ul>
+        <li><strong>Seleccionar individualmente:</strong> Use los checkboxes en cada fila</li>
+        <li><strong>"Todos":</strong> Selecciona todos los matches</li>
+        <li><strong>"Ninguno":</strong> Deselecciona todos</li>
+    </ul>
+    
+    <h3>4.3 Confirmar o Descartar</h3>
+    <ul>
+        <li><strong>✓ (verde):</strong> Confirma los matches seleccionados y los guarda en la base de datos</li>
+        <li><strong>🗑 (rojo):</strong> Descarta todos los matches sin guardar</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <h2>5. Cruce Manual</h2>
+    <p>Para registros que no coinciden automáticamente, puede realizar cruces manuales.</p>
+    
+    <h3>5.1 Seleccionar Registros</h3>
+    
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            En la tabla <strong>RETIENCION</strong>, haga clic en el checkbox de la fila que desea cruzar.
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            En la tabla <strong>PLATAFORMA</strong>, haga clic en el checkbox de la fila correspondiente.
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            Aparecerá un panel superior mostrando:
+            <ul>
+                <li>Monto total seleccionado en RET</li>
+                <li>Monto total seleccionado en PLAT</li>
+                <li>Diferencia entre ambos</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="tip">
+        Puede seleccionar múltiples registros de cada lado. El sistema generará todas las combinaciones posibles (producto cartesiano).
+    </div>
+    
+    <h3>5.2 Generar Staging</h3>
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            Haga clic en <strong>"Cruce Manual (NxM)"</strong> donde N y M son las cantidades seleccionadas.
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            Aparecerá una tabla de <strong>Staging</strong> con todas las combinaciones generadas.
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            Revise las combinaciones y haga clic en <strong>"Confirmar"</strong> para guardar.
+        </div>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <h2>6. Otras Funciones</h2>
+    
+    <h3>6.1 Actualizar Datos</h3>
+    <p>El botón <strong>"Actualizar"</strong> recarga los datos de la base de datos sin necesidad de subir el archivo nuevamente.</p>
+    
+    <h3>6.2 Limpiar Base de Datos</h3>
+    <p>El botón <strong>"Limpiar BD"</strong> elimina todos los datos de la base de datos:</p>
+    <div class="warning">
+        <strong>¡Cuidado!</strong> Esta acción es irreversible. Eliminará:
+        <ul>
+            <li>Todos los registros pendientes</li>
+            <li>Todo el histórico de cruces</li>
+        </ul>
+    </div>
+    
+    <h2>7. Flujo de Trabajo Recomendado</h2>
+    
+    <div class="screenshot">
+        <pre style="text-align: left;">
+┌────────────────┐
+│ 1. Cargar Excel│
+└───────┬────────┘
+        ▼
+┌────────────────┐
+│ 2. Auto-Match  │──────▶ Confirmar matches
+└───────┬────────┘
+        ▼
+┌────────────────┐
+│ 3. Revisar     │
+│    pendientes  │
+└───────┬────────┘
+        ▼
+┌────────────────┐
+│ 4. Cruce Manual│──────▶ Seleccionar y confirmar
+└───────┬────────┘
+        ▼
+┌────────────────┐
+│ 5. Verificar   │
+│    estadísticas│
+└────────────────┘
+        </pre>
+    </div>
+    
+    <h2>8. Solución de Problemas</h2>
+    
+    <table>
+        <tr>
+            <th>Problema</th>
+            <th>Solución</th>
+        </tr>
+        <tr>
+            <td>El archivo no carga</td>
+            <td>Verificar que sea formato .xlsx o .xls y tenga las hojas correctas</td>
+        </tr>
+        <tr>
+            <td>No hay matches automáticos</td>
+            <td>Verificar que los CUIT y montos coincidan exactamente</td>
+        </tr>
+        <tr>
+            <td>La página no responde</td>
+            <td>Recargar la página (F5) o reiniciar el contenedor Docker</td>
+        </tr>
+        <tr>
+            <td>Datos perdidos</td>
+            <td>Los datos persisten en MongoDB. Usar "Actualizar" para recargar</td>
+        </tr>
+    </table>
+    
+    <div class="footer">
+        <p>Estudio Contable JY - Soporte: contacto@estudiojy.com</p>
+        <p>© 2026 - Todos los derechos reservados</p>
+    </div>
+</body>
+</html>
