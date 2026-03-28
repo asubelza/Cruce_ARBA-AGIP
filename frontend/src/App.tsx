@@ -10,7 +10,7 @@ import { AutoMatchPreview } from './components/AutoMatchPreview';
 import { useStats, usePendientes, useAutoMatch, useStaging } from './hooks/useApi';
 import { MatchResult } from './types';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || '/cruce/api';
 
 function App() {
   const [selectedRet, setSelectedRet] = useState<Set<string>>(new Set());

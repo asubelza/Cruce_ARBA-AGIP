@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Card, CardContent, Typography, Box, Alert, Stack, CircularProgress } from '@mui/material';
 import { CloudUpload, CheckCircle, InsertDriveFile } from '@mui/icons-material';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || '/cruce/api';
 
 interface FileUploadProps {
   onUploadSuccess: () => void;
