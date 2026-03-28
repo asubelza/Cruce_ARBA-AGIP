@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Checkbox, Chip, Box } from '@mui/material';
+import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Checkbox, Chip } from '@mui/material';
 import { Ingreso } from '../types';
 
 interface DataTableProps {

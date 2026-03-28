@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Ingreso, CruceOk, Stats, MatchResult, StagingItem } from '../types';
+import { Ingreso, Stats, MatchResult, StagingItem } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 

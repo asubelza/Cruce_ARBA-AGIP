@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Box, Stack, Button, Paper, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Chip } from '@mui/material';
 import { Bolt, MergeType, CheckCircle, Refresh, CleaningServices } from '@mui/icons-material';
 import { Header } from './components/Header';
