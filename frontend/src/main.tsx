@@ -3,18 +3,22 @@ import ReactDOM from 'react-dom/client'
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import App from './App.tsx'
 
-const darkTheme = createTheme({
+const lightTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
-      main: '#0095f6',
+      main: '#1e3a5f',
     },
     secondary: {
-      main: '#00c853',
+      main: '#2d8659',
     },
     background: {
-      default: '#0a0a0a',
-      paper: '#121212',
+      default: '#f8f9fa',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#1e3a5f',
+      secondary: '#6c757d',
     },
   },
   typography: {
@@ -25,6 +29,7 @@ const darkTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
         },
       },
     },
@@ -37,12 +42,19 @@ const darkTheme = createTheme({
         },
       },
     },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        },
+      },
+    },
   },
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={lightTheme}>
       <CssBaseline />
       <App />
     </ThemeProvider>

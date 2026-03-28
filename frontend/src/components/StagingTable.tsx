@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton, Box } from '@mui/material';
+import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import { StagingItem } from '../types';
 
@@ -17,18 +17,17 @@ const formatCurrency = (value: number) => {
 
 export const StagingTable: React.FC<StagingTableProps> = ({ staging, onClear }) => {
   return (
-    <Card sx={{ mb: 3 }} elevation={2}>
+    <Card sx={{ mb: 3 }}>
       <CardHeader
         title="Staging de Cruces (Cartesiano)"
-        titleTypographyProps={{ fontWeight: 600 }}
+        titleTypographyProps={{ fontWeight: 600, sx: { color: 'white' } }}
         action={
-          <IconButton onClick={onClear} color="error">
+          <IconButton onClick={onClear} sx={{ color: 'white' }}>
             <Delete />
           </IconButton>
         }
         sx={{ 
-          bgcolor: 'secondary.main',
-          '& .MuiCardHeader-title': { color: 'white' },
+          bgcolor: '#2d8659',
         }}
       />
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
@@ -36,38 +35,38 @@ export const StagingTable: React.FC<StagingTableProps> = ({ staging, onClear }) 
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>RET ID</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>PLAT ID</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>CUIT</TableCell>
-                <TableCell align="right" sx={{ bgcolor: 'background.paper' }}>Monto RET</TableCell>
-                <TableCell align="right" sx={{ bgcolor: 'background.paper' }}>Monto PLAT</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>RET ID</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>PLAT ID</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>CUIT</TableCell>
+                <TableCell align="right" sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Monto RET</TableCell>
+                <TableCell align="right" sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Monto PLAT</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {staging.map((item, idx) => (
                 <TableRow key={idx} hover>
                   <TableCell>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#6c757d' }}>
                       {item.ret_id.slice(-8)}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#6c757d' }}>
                       {item.plat_id.slice(-8)}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#1e3a5f' }}>
                       {item.cuit_ret}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Typography variant="body2" color="primary.main" sx={{ fontFamily: 'monospace' }}>
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#1e3a5f' }}>
                       {formatCurrency(item.monto_ret)}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Typography variant="body2" color="success.main" sx={{ fontFamily: 'monospace' }}>
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#2d8659' }}>
                       {formatCurrency(item.monto_plat)}
                     </Typography>
                   </TableCell>

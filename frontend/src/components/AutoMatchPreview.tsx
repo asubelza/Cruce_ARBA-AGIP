@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton, Box, Chip, Checkbox, Button, Stack } from '@mui/material';
-import { Delete, Check, CheckCircle } from '@mui/icons-material';
+import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton, Chip, Checkbox, Button, Stack } from '@mui/material';
+import { Delete, CheckCircle } from '@mui/icons-material';
 import { MatchResult } from '../types';
 
 interface AutoMatchPreviewProps {
@@ -45,33 +45,52 @@ export const AutoMatchPreview: React.FC<AutoMatchPreviewProps> = ({ matches, onC
   const selectedCount = selectedIndices.size;
 
   return (
-    <Card sx={{ mb: 3 }} elevation={2}>
+    <Card sx={{ mb: 3 }}>
       <CardHeader
         title={`Auto-Match: ${matches.length} cruces encontrados (${selectedCount} seleccionados)`}
-        titleTypographyProps={{ fontWeight: 600 }}
+        titleTypographyProps={{ fontWeight: 600, sx: { color: 'white' } }}
         avatar={
           <Chip 
             label={`${selectedCount}/${matches.length}`}
-            color={selectedCount === matches.length ? 'success' : 'primary'}
             size="small"
+            sx={{ 
+              bgcolor: 'white',
+              color: selectedCount === matches.length ? '#2d8659' : '#1e3a5f',
+              fontWeight: 600
+            }}
           />
         }
         action={
           <Stack direction="row" spacing={1}>
-            <Button size="small" onClick={selectAll}>Todos</Button>
-            <Button size="small" onClick={deselectAll}>Ninguno</Button>
-            <IconButton onClick={handleConfirm} color="success" title="Confirmar seleccionados" disabled={selectedCount === 0}>
+            <Button 
+              size="small" 
+              onClick={selectAll}
+              sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+            >
+              Todos
+            </Button>
+            <Button 
+              size="small" 
+              onClick={deselectAll}
+              sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+            >
+              Ninguno
+            </Button>
+            <IconButton 
+              onClick={handleConfirm} 
+              title="Confirmar seleccionados" 
+              disabled={selectedCount === 0}
+              sx={{ color: selectedCount > 0 ? '#a5d6a7' : 'rgba(255,255,255,0.5)' }}
+            >
               <CheckCircle />
             </IconButton>
-            <IconButton onClick={onClear} color="error" title="Descartar todo">
+            <IconButton onClick={onClear} title="Descartar todo" sx={{ color: 'rgba(255,255,255,0.7)' }}>
               <Delete />
             </IconButton>
           </Stack>
         }
         sx={{ 
-          bgcolor: 'primary.main',
-          '& .MuiCardHeader-title': { color: 'white' },
-          '& .MuiButton-root': { color: 'white' },
+          bgcolor: '#1e3a5f',
         }}
       />
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
@@ -79,13 +98,13 @@ export const AutoMatchPreview: React.FC<AutoMatchPreviewProps> = ({ matches, onC
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>
-                <TableCell padding="checkbox" sx={{ bgcolor: 'background.paper' }}>✓</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>CUIT</TableCell>
-                <TableCell align="right" sx={{ bgcolor: 'background.paper' }}>Monto RET</TableCell>
-                <TableCell align="right" sx={{ bgcolor: 'background.paper' }}>Monto PLAT</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>Período RET</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>Período PLAT</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>Estado</TableCell>
+                <TableCell padding="checkbox" sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>✓</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>CUIT</TableCell>
+                <TableCell align="right" sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Monto RET</TableCell>
+                <TableCell align="right" sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Monto PLAT</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Período RET</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Período PLAT</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Estado</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -103,40 +122,44 @@ export const AutoMatchPreview: React.FC<AutoMatchPreviewProps> = ({ matches, onC
                       <Checkbox
                         checked={isSelected}
                         onChange={() => toggleSelection(idx)}
-                        color="primary"
+                        sx={{ color: '#1e3a5f', '&.Mui-checked': { color: '#1e3a5f' } }}
                         size="small"
                       />
                     </TableCell>
                     <TableCell onClick={() => toggleSelection(idx)}>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#1e3a5f' }}>
                         {item.cuit}
                       </Typography>
                     </TableCell>
                     <TableCell align="right" onClick={() => toggleSelection(idx)}>
-                      <Typography variant="body2" color="primary.main" sx={{ fontFamily: 'monospace' }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#1e3a5f' }}>
                         {formatCurrency(item.monto_ret)}
                       </Typography>
                     </TableCell>
                     <TableCell align="right" onClick={() => toggleSelection(idx)}>
-                      <Typography variant="body2" color="success.main" sx={{ fontFamily: 'monospace' }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#2d8659' }}>
                         {formatCurrency(item.monto_plat)}
                       </Typography>
                     </TableCell>
                     <TableCell onClick={() => toggleSelection(idx)}>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: '#6c757d' }}>
                         {item.periodo_ret}
                       </Typography>
                     </TableCell>
                     <TableCell onClick={() => toggleSelection(idx)}>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: '#6c757d' }}>
                         {item.periodo_plat}
                       </Typography>
                     </TableCell>
                     <TableCell onClick={() => toggleSelection(idx)}>
                       <Chip 
                         label={amountsMatch ? 'OK' : 'DIF'}
-                        color={amountsMatch ? 'success' : 'warning'}
                         size="small"
+                        sx={{ 
+                          bgcolor: amountsMatch ? '#e8f5e9' : '#fff3e0',
+                          color: amountsMatch ? '#2d8659' : '#f57c00',
+                          fontWeight: 600
+                        }}
                       />
                     </TableCell>
                   </TableRow>

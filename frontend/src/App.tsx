@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Container, Box, Stack, Button, Chip, Paper, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
+import { Box, Stack, Button, Paper, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { Bolt, MergeType, CheckCircle, Refresh, CleaningServices } from '@mui/icons-material';
 import { Header } from './components/Header';
 import { StatsCards } from './components/StatsCards';
@@ -137,10 +137,10 @@ function App() {
   const difference = selectedRetTotal - selectedPlatTotal;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8f9fa' }}>
       <Header />
       
-      <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box sx={{ maxWidth: 'xl', mx: 'auto', py: 3, px: 2 }}>
         <StatsCards stats={stats} loading={statsLoading} />
         
         <FileUpload onUploadSuccess={handleUploadSuccess} />
@@ -150,26 +150,37 @@ function App() {
             variant="outlined"
             startIcon={<Refresh />}
             onClick={() => { refetchPendientes(); refetchStats(); }}
+            sx={{ 
+              borderColor: '#1e3a5f', 
+              color: '#1e3a5f',
+              '&:hover': { borderColor: '#1e3a5f', bgcolor: '#e3f2fd' }
+            }}
           >
             Actualizar
           </Button>
           
           <Button
             variant="contained"
-            color="primary"
             startIcon={autoMatchLoading ? <Refresh /> : <Bolt />}
             onClick={handleAutoMatch}
             disabled={autoMatchLoading}
+            sx={{ 
+              bgcolor: '#1e3a5f',
+              '&:hover': { bgcolor: '#152d4a' }
+            }}
           >
             Auto-Match
           </Button>
           
           <Button
             variant="contained"
-            color="secondary"
             startIcon={<MergeType />}
             onClick={handleGenerateStaging}
             disabled={stagingLoading || selectedRet.size === 0 || selectedPlat.size === 0}
+            sx={{ 
+              bgcolor: '#6c757d',
+              '&:hover': { bgcolor: '#545b62' }
+            }}
           >
             Cruce Manual ({selectedRet.size}x{selectedPlat.size})
           </Button>
@@ -177,10 +188,13 @@ function App() {
           {staging.length > 0 && (
             <Button
               variant="contained"
-              color="success"
               startIcon={<CheckCircle />}
               onClick={handleConfirmStaging}
               disabled={stagingLoading}
+              sx={{ 
+                bgcolor: '#2d8659',
+                '&:hover': { bgcolor: '#1e6b45' }
+              }}
             >
               Confirmar ({staging.length})
             </Button>
@@ -190,9 +204,13 @@ function App() {
 
           <Button
             variant="outlined"
-            color="error"
             startIcon={<CleaningServices />}
             onClick={() => setConfirmDialog({ open: true, action: handleLimpiarBD, title: 'Limpiar Base de Datos' })}
+            sx={{ 
+              borderColor: '#dc3545', 
+              color: '#dc3545',
+              '&:hover': { borderColor: '#dc3545', bgcolor: '#fff5f5' }
+            }}
           >
             Limpiar BD
           </Button>
@@ -207,21 +225,33 @@ function App() {
         )}
 
         {(selectedRet.size > 0 || selectedPlat.size > 0) && (
-          <Paper sx={{ p: 2, mb: 3 }} elevation={2}>
+          <Paper sx={{ p: 2, mb: 3 }}>
             <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
               <Chip
                 label={`RET: $${selectedRetTotal.toLocaleString()} (${selectedRet.size})`}
-                color="primary"
-                variant="outlined"
+                sx={{ 
+                  bgcolor: '#e3f2fd',
+                  color: '#1e3a5f',
+                  border: '1px solid #1e3a5f',
+                  fontWeight: 600
+                }}
               />
               <Chip
                 label={`PLAT: $${selectedPlatTotal.toLocaleString()} (${selectedPlat.size})`}
-                color="success"
-                variant="outlined"
+                sx={{ 
+                  bgcolor: '#e8f5e9',
+                  color: '#2d8659',
+                  border: '1px solid #2d8659',
+                  fontWeight: 600
+                }}
               />
               <Chip
                 label={`Dif: $${difference.toLocaleString()}`}
-                color={Math.abs(difference) <= 0.01 ? 'success' : 'error'}
+                sx={{ 
+                  bgcolor: Math.abs(difference) <= 0.01 ? '#e8f5e9' : '#fff3e0',
+                  color: Math.abs(difference) <= 0.01 ? '#2d8659' : '#f57c00',
+                  fontWeight: 600
+                }}
               />
             </Stack>
           </Paper>
@@ -247,7 +277,7 @@ function App() {
         {staging.length > 0 && (
           <StagingTable staging={staging} onClear={clearStaging} />
         )}
-      </Container>
+      </Box>
 
       <Snackbar
         open={snackbar.open}
@@ -255,19 +285,23 @@ function App() {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert 
+          severity={snackbar.severity} 
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{ bgcolor: snackbar.severity === 'success' ? '#e8f5e9' : snackbar.severity === 'error' ? '#ffebee' : '#e3f2fd', color: '#1e3a5f' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
 
       <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}>
-        <DialogTitle>{confirmDialog.title}</DialogTitle>
+        <DialogTitle sx={{ color: '#1e3a5f' }}>{confirmDialog.title}</DialogTitle>
         <DialogContent>
           <Typography>Esta acción no se puede deshacer. ¿Estás seguro?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}>Cancelar</Button>
-          <Button color="error" onClick={confirmDialog.action}>Confirmar</Button>
+          <Button onClick={() => setConfirmDialog({ ...confirmDialog, open: false })} sx={{ color: '#6c757d' }}>Cancelar</Button>
+          <Button onClick={confirmDialog.action} sx={{ color: '#dc3545' }}>Confirmar</Button>
         </DialogActions>
       </Dialog>
     </Box>

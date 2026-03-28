@@ -1,41 +1,40 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Box, IconButton, Tooltip } from '@mui/material';
-import { TableChart, Brightness4, Brightness7 } from '@mui/icons-material';
+import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
+import { TableChart, ArrowBack } from '@mui/icons-material';
 
-interface HeaderProps {
-  darkMode?: boolean;
-  toggleDarkMode?: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ darkMode = true, toggleDarkMode }) => {
+export const Header: React.FC = () => {
   return (
-    <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
+    <AppBar position="sticky" elevation={0} sx={{ bgcolor: '#1e3a5f' }}>
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ 
-            background: 'linear-gradient(135deg, #0095f6 0%, #e1306c 100%)',
+            background: 'rgba(255,255,255,0.15)',
             p: 1,
             borderRadius: 2,
           }}>
             <TableChart sx={{ color: 'white' }} />
           </Box>
-          <Typography variant="h6" component="h1" sx={{ fontWeight: 700 }}>
+          <Typography variant="h6" component="h1" sx={{ fontWeight: 700, color: 'white' }}>
             Cruce{' '}
-            <Box component="span" sx={{ color: 'primary.main' }}>ARBA</Box>
+            <Box component="span" sx={{ color: '#90caf9' }}>ARBA</Box>
             {' - '}
-            <Box component="span" sx={{ color: 'success.main' }}>AGIP</Box>
+            <Box component="span" sx={{ color: '#a5d6a7' }}>AGIP</Box>
           </Typography>
         </Box>
         
         <Box sx={{ flexGrow: 1 }} />
         
-        {toggleDarkMode && (
-          <Tooltip title={darkMode ? 'Modo claro' : 'Modo oscuro'}>
-            <IconButton onClick={toggleDarkMode} color="inherit">
-              {darkMode ? <Brightness7 /> : <Brightness4 />}
-            </IconButton>
-          </Tooltip>
-        )}
+        <Button 
+          href="/"
+          startIcon={<ArrowBack />}
+          sx={{ 
+            color: 'white', 
+            textTransform: 'none',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+          }}
+        >
+          Volver al Estudio
+        </Button>
       </Toolbar>
     </AppBar>
   );

@@ -8,6 +8,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: #f8f9fa;
 }
 
 ::-webkit-scrollbar {
@@ -16,14 +17,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #121212;
+  background: #f8f9fa;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: #dee2e6;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #363636;
+  background: #adb5bd;
 }

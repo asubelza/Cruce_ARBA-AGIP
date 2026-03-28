@@ -75,11 +75,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   };
 
   return (
-    <Card sx={{ mb: 3 }} elevation={2}>
+    <Card sx={{ mb: 3 }}>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-          <InsertDriveFile color="primary" />
-          <Typography variant="h6">Cargar Archivo Excel</Typography>
+          <InsertDriveFile sx={{ color: '#1e3a5f' }} />
+          <Typography variant="h6" sx={{ color: '#1e3a5f', fontWeight: 600 }}>Cargar Archivo Excel</Typography>
         </Stack>
 
         {error && (
@@ -96,16 +96,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
           sx={{
             border: 2,
             borderStyle: 'dashed',
-            borderColor: isDragging ? 'primary.main' : 'divider',
+            borderColor: isDragging ? '#1e3a5f' : '#dee2e6',
             borderRadius: 2,
             p: 4,
             textAlign: 'center',
             cursor: 'pointer',
             transition: 'all 0.2s',
-            bgcolor: isDragging ? 'action.hover' : 'transparent',
+            bgcolor: isDragging ? '#e3f2fd' : '#fafafa',
             '&:hover': {
-              borderColor: 'primary.main',
-              bgcolor: 'action.hover',
+              borderColor: '#1e3a5f',
+              bgcolor: '#e3f2fd',
             },
           }}
         >
@@ -119,31 +119,31 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
           
           {uploading ? (
             <Stack alignItems="center" spacing={2}>
-              <CircularProgress />
-              <Typography color="text.secondary">Subiendo archivo...</Typography>
+              <CircularProgress sx={{ color: '#1e3a5f' }} />
+              <Typography sx={{ color: '#6c757d' }}>Subiendo archivo...</Typography>
             </Stack>
           ) : uploadResult ? (
             <Stack alignItems="center" spacing={2}>
-              <CheckCircle sx={{ fontSize: 48, color: 'success.main' }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              <CheckCircle sx={{ fontSize: 48, color: '#2d8659' }} />
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1e3a5f' }}>
                 {uploadResult.message}
               </Typography>
               <Stack direction="row" spacing={3}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: '#6c757d' }}>
                   RETIENCION: {uploadResult.retencion_count} registros
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: '#6c757d' }}>
                   PLATAFORMA: {uploadResult.plataforma_count} registros
                 </Typography>
               </Stack>
             </Stack>
           ) : (
             <Stack alignItems="center" spacing={2}>
-              <CloudUpload sx={{ fontSize: 48, color: 'text.disabled' }} />
-              <Typography>
+              <CloudUpload sx={{ fontSize: 48, color: '#adb5bd' }} />
+              <Typography sx={{ color: '#1e3a5f' }}>
                 Arrastra un archivo aquí o haz clic para seleccionar
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: '#6c757d' }}>
                 Archivos Excel (.xlsx, .xls) con hojas RETENCION y PLATAFORMA
               </Typography>
             </Stack>

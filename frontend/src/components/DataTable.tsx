@@ -25,26 +25,29 @@ export const DataTable: React.FC<DataTableProps> = ({
   color 
 }) => {
   const colorMap = {
-    primary: { bg: 'primary.main', opacity: 0.1 },
-    success: { bg: 'success.main', opacity: 0.1 },
+    primary: { bg: '#1e3a5f', text: 'white' },
+    success: { bg: '#2d8659', text: 'white' },
   };
 
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} elevation={2}>
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardHeader
         title={title}
-        titleTypographyProps={{ fontWeight: 600 }}
+        titleTypographyProps={{ fontWeight: 600, sx: { color: colorMap[color].text } }}
         avatar={
           <Chip 
             label={`${data.length} registros`}
             size="small"
-            color={color}
-            variant="outlined"
+            sx={{ 
+              bgcolor: 'white',
+              color: colorMap[color].bg,
+              border: `1px solid ${colorMap[color].bg}`,
+              fontWeight: 600
+            }}
           />
         }
         sx={{ 
-          bgcolor: `${colorMap[color].bg}`,
-          '& .MuiCardHeader-title': { color: 'white' },
+          bgcolor: colorMap[color].bg,
         }}
       />
       <CardContent sx={{ flex: 1, p: 0, '&:last-child': { pb: 0 } }}>
@@ -52,10 +55,10 @@ export const DataTable: React.FC<DataTableProps> = ({
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>
-                <TableCell padding="checkbox" sx={{ bgcolor: 'background.paper' }}>Sel</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>CUIT</TableCell>
-                <TableCell align="right" sx={{ bgcolor: 'background.paper' }}>Monto</TableCell>
-                <TableCell sx={{ bgcolor: 'background.paper' }}>Período</TableCell>
+                <TableCell padding="checkbox" sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Sel</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>CUIT</TableCell>
+                <TableCell align="right" sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Monto</TableCell>
+                <TableCell sx={{ bgcolor: '#f8f9fa', color: '#1e3a5f', fontWeight: 600 }}>Período</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -67,12 +70,20 @@ export const DataTable: React.FC<DataTableProps> = ({
                     key={itemId}
                     hover
                     selected={isSelected}
-                    sx={{ cursor: 'pointer' }}
+                    sx={{ 
+                      cursor: 'pointer',
+                      '&.Mui-selected': {
+                        bgcolor: color === 'primary' ? '#e3f2fd' : '#e8f5e9',
+                      }
+                    }}
                   >
                     <TableCell padding="checkbox">
                       <Checkbox
                         checked={isSelected}
-                        color={color}
+                        sx={{ 
+                          color: colorMap[color].bg,
+                          '&.Mui-checked': { color: colorMap[color].bg }
+                        }}
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -81,17 +92,17 @@ export const DataTable: React.FC<DataTableProps> = ({
                       />
                     </TableCell>
                     <TableCell onClick={() => onToggleSelection(itemId)}>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#1e3a5f' }}>
                         {item.cuit}
                       </Typography>
                     </TableCell>
                     <TableCell align="right" onClick={() => onToggleSelection(itemId)}>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500, color: '#1e3a5f' }}>
                         {formatCurrency(item.monto)}
                       </Typography>
                     </TableCell>
                     <TableCell onClick={() => onToggleSelection(itemId)}>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: '#6c757d' }}>
                         {item.periodo}
                       </Typography>
                     </TableCell>
@@ -101,7 +112,7 @@ export const DataTable: React.FC<DataTableProps> = ({
               {data.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                    <Typography color="text.secondary">
+                    <Typography sx={{ color: '#6c757d' }}>
                       No hay registros pendientes
                     </Typography>
                   </TableCell>
