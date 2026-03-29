@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Box, Button } from '@mui/material';
+import { AppBar, Toolbar, Box, Button, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 
 export const Header: React.FC = () => {
@@ -8,10 +8,20 @@ export const Header: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <img 
             src="/images/logos/Logo_Mediano.png" 
-            alt="Estudio JY" 
-            height="40"
-            style={{ filter: 'brightness(0) invert(1)' }}
+            alt="Estudio Contable JY" 
+            height="50"
+            style={{ objectFit: 'contain' }}
           />
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: 'white', 
+              fontWeight: 700,
+              display: { xs: 'none', sm: 'block' }
+            }}
+          >
+            Estudio Contable JY
+          </Typography>
         </Box>
         
         <Box sx={{ flexGrow: 1 }} />
