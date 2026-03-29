@@ -1,9 +1,12 @@
-import { AppBar, Toolbar, Box, Button, Typography } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { AppBar, Toolbar, Box, Button, Typography, IconButton } from '@mui/material';
+import { ArrowBack, Brightness4, Brightness7 } from '@mui/icons-material';
+import { useDarkMode } from '../main';
 
 export const Header: React.FC = () => {
+  const { darkMode, toggleDarkMode } = useDarkMode();
+
   return (
-    <AppBar position="sticky" elevation={0} sx={{ bgcolor: '#1e3a5f' }}>
+    <AppBar position="sticky" elevation={0}>
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <img 
@@ -15,27 +18,33 @@ export const Header: React.FC = () => {
           <Typography 
             variant="h6" 
             sx={{ 
-              color: 'white', 
               fontWeight: 700,
               display: { xs: 'none', sm: 'block' }
             }}
           >
-            Estudio Contable JY
+            Cruce ARBA-AGIP
           </Typography>
         </Box>
         
         <Box sx={{ flexGrow: 1 }} />
         
+        <IconButton 
+          onClick={toggleDarkMode}
+          sx={{ color: 'inherit' }}
+          title={darkMode ? 'Modo claro' : 'Modo oscuro'}
+        >
+          {darkMode ? <Brightness7 /> : <Brightness4 />}
+        </IconButton>
+        
         <Button 
           href="/"
           startIcon={<ArrowBack />}
           sx={{ 
-            color: 'white', 
             textTransform: 'none',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+            ml: 1
           }}
         >
-          Volver al Estudio
+          Volver
         </Button>
       </Toolbar>
     </AppBar>
