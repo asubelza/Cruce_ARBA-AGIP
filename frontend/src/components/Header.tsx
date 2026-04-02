@@ -6,7 +6,14 @@ export const Header: React.FC = () => {
   const { darkMode, toggleDarkMode } = useDarkMode();
 
   return (
-    <AppBar position="sticky" elevation={0}>
+    <AppBar 
+      position="sticky" 
+      elevation={0}
+      sx={{ 
+        bgcolor: darkMode ? '#16213e' : '#1e3a5f',
+        color: darkMode ? '#e0e0e0' : 'white'
+      }}
+    >
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <img 
@@ -19,7 +26,8 @@ export const Header: React.FC = () => {
             variant="h6" 
             sx={{ 
               fontWeight: 700,
-              display: { xs: 'none', sm: 'block' }
+              display: { xs: 'none', sm: 'block' },
+              color: 'inherit'
             }}
           >
             Cruce ARBA-AGIP
@@ -41,7 +49,8 @@ export const Header: React.FC = () => {
           startIcon={<ArrowBack />}
           sx={{ 
             textTransform: 'none',
-            ml: 1
+            ml: 1,
+            color: 'inherit'
           }}
         >
           Volver
