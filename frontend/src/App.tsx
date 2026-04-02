@@ -9,10 +9,12 @@ import { StagingTable } from './components/StagingTable';
 import { AutoMatchPreview } from './components/AutoMatchPreview';
 import { useStats, usePendientes, useAutoMatch, useStaging } from './hooks/useApi';
 import { MatchResult } from './types';
+import { useDarkMode } from './main';
 
 const API_URL = import.meta.env.VITE_API_URL || '/cruce/api';
 
 function App() {
+  const { darkMode } = useDarkMode();
   const [selectedRet, setSelectedRet] = useState<Set<string>>(new Set());
   const [selectedPlat, setSelectedPlat] = useState<Set<string>>(new Set());
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'info' });
@@ -137,7 +139,7 @@ function App() {
   const difference = selectedRetTotal - selectedPlatTotal;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f8f9fa' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: darkMode ? '#1a1a2e' : '#f8f9fa' }}>
       <Header />
       
       <Box sx={{ maxWidth: 'xl', mx: 'auto', py: 3, px: 2 }}>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import { Box, Card, CardContent, Typography, Skeleton, Stack } from '@mui/material';
 import { TableChart, Storage, CheckCircle, Warning } from '@mui/icons-material';
 import { Stats } from '../types';
@@ -8,25 +9,30 @@ interface StatsCardProps {
   loading: boolean;
 }
 
-const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: number; icon: React.ElementType; color: string }) => (
-  <Card sx={{ height: '100%', border: `2px solid ${color}20` }}>
-    <CardContent>
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Box>
-          <Typography variant="body2" sx={{ color: '#6c757d', mb: 0.5 }}>
-            {title}
-          </Typography>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a5f' }}>
-            {value.toLocaleString()}
-          </Typography>
-        </Box>
-        <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${color}15` }}>
-          <Icon sx={{ color }} />
-        </Box>
-      </Stack>
-    </CardContent>
-  </Card>
-);
+const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: number; icon: React.ElementType; color: string }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  
+  return (
+    <Card sx={{ height: '100%', border: `2px solid ${color}20` }}>
+      <CardContent>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="body2" sx={{ color: isDark ? '#b0b0b0' : '#6c757d', mb: 0.5 }}>
+              {title}
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: isDark ? '#ffffff' : '#1e3a5f' }}>
+              {value.toLocaleString()}
+            </Typography>
+          </Box>
+          <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${color}15` }}>
+            <Icon sx={{ color }} />
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
 
 export const StatsCards: React.FC<StatsCardProps> = ({ stats, loading }) => {
   if (loading || !stats) {
