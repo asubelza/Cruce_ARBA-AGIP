@@ -4,6 +4,8 @@
  */
 
 import { vi } from 'vitest';
+import '@testing-library/jest-dom';
+import { act } from 'react';
 
 // Mock localStorage
 const localStorageMock = {
@@ -42,3 +44,6 @@ globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
 
 // Mock scrollTo
 globalThis.scrollTo = vi.fn();
+
+// Make act available globally
+(globalThis as any).act = act;
