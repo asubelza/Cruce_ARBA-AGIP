@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton, Box } from '@mui/material';
+import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import { StagingItem } from '../types';
 

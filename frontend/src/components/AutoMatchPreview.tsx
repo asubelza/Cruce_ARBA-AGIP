@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton, Box, Chip, Checkbox, Button, Stack } from '@mui/material';
-import { Delete, Check, CheckCircle } from '@mui/icons-material';
+import { Card, CardHeader, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton, Chip, Checkbox, Button, Stack } from '@mui/material';
+import { Delete, CheckCircle } from '@mui/icons-material';
 import { MatchResult } from '../types';
 
 interface AutoMatchPreviewProps {

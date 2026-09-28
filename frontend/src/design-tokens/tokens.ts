@@ -118,22 +118,33 @@ export interface ZIndexScale {
   toast: number;
 }
 
+export type DensityMode = 'comfortable' | 'compact' | 'dense';
+
 export interface DensityScale {
   comfortable: number;
   compact: number;
   dense: number;
+  rowHeights: {
+    comfortable: number;
+    compact: number;
+    dense: number;
+  };
 }
 
 export interface MotionScale {
   durations: {
+    instant: string;
     fast: string;
     normal: string;
     slow: string;
+    hero: string;
   };
   easings: {
     standard: string;
     emphasize: string;
     decelerate: string;
+    accelerate: string;
+    sharp: string;
   };
 }
 
@@ -290,17 +301,26 @@ export const tokens: DesignTokens = {
     comfortable: 1.0,
     compact: 0.75,
     dense: 0.5,
+    rowHeights: {
+      comfortable: 24,
+      compact: 18,
+      dense: 14,
+    },
   },
   motion: {
     durations: {
+      instant: '0ms',
       fast: '150ms',
       normal: '250ms',
       slow: '400ms',
+      hero: '800ms',
     },
     easings: {
       standard: 'cubic-bezier(0.2, 0, 0, 1)',
       emphasize: 'cubic-bezier(0.2, 0, 0.38, 1)',
       decelerate: 'cubic-bezier(0, 0, 0.38, 1)',
+      accelerate: 'cubic-bezier(0.4, 0, 1, 1)',
+      sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
     },
   },
   breakpoints: {
@@ -327,6 +347,7 @@ export type TokenPath =
   | `shadows.${keyof ShadowScale}`
   | `zIndex.${keyof ZIndexScale}`
   | `density.${keyof DensityScale}`
+  | `density.rowHeights.${keyof DensityScale['rowHeights']}`
   | `motion.durations.${keyof MotionScale['durations']}`
   | `motion.easings.${keyof MotionScale['easings']}`
   | `breakpoints.${keyof BreakpointScale}`;

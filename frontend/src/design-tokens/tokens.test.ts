@@ -110,13 +110,21 @@ describe('Design Tokens - Structure', () => {
     expect(tokens.density.comfortable).toBe(1.0);
     expect(tokens.density.compact).toBe(0.75);
     expect(tokens.density.dense).toBe(0.5);
+    expect(tokens.density.rowHeights.comfortable).toBe(24);
+    expect(tokens.density.rowHeights.compact).toBe(18);
+    expect(tokens.density.rowHeights.dense).toBe(14);
   });
 
   it('should have motion scale with correct values', () => {
+    expect(tokens.motion.durations.instant).toBe('0ms');
     expect(tokens.motion.durations.fast).toBe('150ms');
     expect(tokens.motion.durations.normal).toBe('250ms');
     expect(tokens.motion.durations.slow).toBe('400ms');
+    expect(tokens.motion.durations.hero).toBe('800ms');
     expect(tokens.motion.easings.standard).toBe('cubic-bezier(0.2, 0, 0, 1)');
+    expect(tokens.motion.easings.decelerate).toBe('cubic-bezier(0, 0, 0.38, 1)');
+    expect(tokens.motion.easings.sharp).toBe('cubic-bezier(0.4, 0, 0.6, 1)');
+    expect(tokens.motion.easings.accelerate).toBe('cubic-bezier(0.4, 0, 1, 1)');
   });
 
   it('should have spacing scale with correct base values', () => {
@@ -172,7 +180,9 @@ describe('Token Value Retrieval', () => {
   });
 
   it('should return empty string for invalid paths', () => {
-    expect(getTokenValue(tokens, 'colors.invalid.path')).toBe('');
+    // @ts-expect-error - testing invalid path handling
+    expect(getTokenValue(tokens, 'colors.semantic.invalid')).toBe('');
+    // @ts-expect-error - testing invalid path handling
     expect(getTokenValue(tokens, 'nonexistent.path')).toBe('');
   });
 });
@@ -291,8 +301,11 @@ describe('Token Types', () => {
       'shadows.md',
       'zIndex.modal',
       'density.comfortable',
+      'density.rowHeights.comfortable',
       'motion.durations.normal',
+      'motion.durations.hero',
       'motion.easings.standard',
+      'motion.easings.sharp',
       'breakpoints.md',
     ];
     expect(validPaths.length).toBeGreaterThan(0);

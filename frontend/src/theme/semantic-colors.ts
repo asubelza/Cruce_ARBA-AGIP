@@ -3,7 +3,7 @@
  * Maps semantic color names to token values for easier consumption
  */
 
-import { tokens, SemanticColors, SurfaceColors, TextColors, ColorToken } from '../design-tokens/tokens';
+import { tokens, SurfaceColors, TextColors, ColorToken } from '../design-tokens/tokens';
 
 export interface SemanticColorAliases {
   // Domain-specific semantic colors

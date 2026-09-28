@@ -1,17 +1,78 @@
 /**
  * ECJY Theme Provider - React Context Provider wrapping MUI ThemeProvider
  * Consumes CSS vars; exposes useECJYTokens() hook; feature-flag gated
+ * Provides density context and feature flag helpers
  */
 
-import React, { createContext, useContext, useMemo, useEffect, ReactNode } from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme, CssBaseline, Theme } from '@mui/material';
-import { tokens, DesignTokens } from '../design-tokens/tokens';
+import { 
+  createContext, 
+  useContext, 
+  useMemo, 
+  useEffect, 
+  ReactNode, 
+  useState,
+  useCallback 
+} from 'react';
+import { ThemeProvider as MuiThemeProvider, createTheme, CssBaseline, Theme, Shadows } from '@mui/material';
+import { tokens, DesignTokens, DensityMode } from '../design-tokens/tokens';
 import { generateAllCSSVars, injectCSSVars, removeCSSVars } from '../design-tokens/css-vars';
 import { semanticColors, muiPaletteColors } from './semantic-colors';
 
 // Feature flag - can be set via Vite define or environment variable
-const FEATURE_FLAG = import.meta.env.VITE_ECJY_VISUAL_PHASE_1 === 'true' || 
-                     import.meta.env.VITE_ECJY_VISUAL_PHASE_1 === '1';
+const FEATURE_FLAG = (import.meta.env.VITE_ECJY_VISUAL_PHASE_1 === 'true' || 
+                      import.meta.env.VITE_ECJY_VISUAL_PHASE_1 === '1') as boolean;
+
+// ============================================
+// Density Context
+// ============================================
+
+interface DensityContextValue {
+  density: DensityMode;
+  setDensity: (d: DensityMode) => void;
+  rowHeight: number;
+  multiplier: number;
+}
+
+const DensityContext = createContext<DensityContextValue | null>(null);
+
+export function useDensityContext(): DensityContextValue {
+  const context = useContext(DensityContext);
+  if (!context) {
+    throw new Error('useDensityContext must be used within an ECJYThemeProvider');
+  }
+  return context;
+}
+
+export function useDensityContextOptional(): DensityContextValue | null {
+  return useContext(DensityContext);
+}
+
+// ============================================
+// Feature Flag Context
+// ============================================
+
+interface FeatureFlagContextValue {
+  isEnabled: (flag: string) => boolean;
+  allFlags: Record<string, boolean>;
+}
+
+const FeatureFlagContext = createContext<FeatureFlagContextValue | null>(null);
+
+export function useFeatureFlagContext(): FeatureFlagContextValue {
+  const context = useContext(FeatureFlagContext);
+  if (!context) {
+    throw new Error('useFeatureFlagContext must be used within an ECJYThemeProvider');
+  }
+  return context;
+}
+
+export function useFeatureFlagContextOptional(): FeatureFlagContextValue | null {
+  return useContext(FeatureFlagContext);
+}
+
+// ============================================
+// Theme Context (existing)
+// ============================================
 
 export interface ECJYThemeContextValue {
   tokens: DesignTokens;
@@ -34,6 +95,10 @@ export function useECJYTokensOptional(): ECJYThemeContextValue | null {
   return useContext(ECJYThemeContext);
 }
 
+// ============================================
+// Provider Props
+// ============================================
+
 interface ECJYThemeProviderProps {
   children: ReactNode;
   /** Override tokens for theming customization */
@@ -42,6 +107,68 @@ interface ECJYThemeProviderProps {
   disabled?: boolean;
 }
 
+// ============================================
+// Helper functions for feature flags
+// ============================================
+
+const FLAG_PREFIX = 'VITE_ECJY_';
+const STORAGE_PREFIX = 'ecjy-';
+
+function getEnvFlag(flag: string): boolean | undefined {
+  const envKey = `${FLAG_PREFIX}${flag.toUpperCase().replace(/-/g, '_')}`;
+  const value = import.meta.env[envKey];
+  if (value === undefined) return undefined;
+  return value === 'true' || value === '1';
+}
+
+function getStorageFlag(flag: string): boolean | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const stored = localStorage.getItem(`${STORAGE_PREFIX}${flag.toLowerCase()}`);
+  if (stored === null) return undefined;
+  return stored === 'true';
+}
+
+function resolveFlag(flag: string): boolean {
+  // Priority: localStorage override > env var > false (default)
+  const storageValue = getStorageFlag(flag);
+  if (storageValue !== undefined) return storageValue;
+  
+  const envValue = getEnvFlag(flag);
+  if (envValue !== undefined) return envValue;
+  
+  return false;
+}
+
+function getAllKnownFlags(): string[] {
+  return [
+    'PHASE_1',
+    'HERO_OPENING',
+    'DIFFERENCE_DETECTOR',
+    'STATE_INDICATORS',
+    'COMPARISON_TABLE',
+    'CONNECTION_LINES',
+    'COMPARISON_ENGINE',
+    'DATA_LAYERS',
+    'DETECTION_PANEL',
+    'VALIDATION_WORKSPACE',
+    'STATS_DISPLAY',
+    'FILE_UPLOAD',
+    'APP_HEADER',
+    'PARALLEL_RENDER',
+  ];
+}
+
+// Density config with proper typing
+const DENSITY_CONFIG: Record<DensityMode, { rowHeight: number; multiplier: number }> = {
+  comfortable: { rowHeight: 24, multiplier: 1.0 },
+  compact: { rowHeight: 18, multiplier: 0.75 },
+  dense: { rowHeight: 14, multiplier: 0.5 },
+};
+
+// ============================================
+// Main Provider
+// ============================================
+
 export function ECJYThemeProvider({
   children,
   tokensOverride,
@@ -49,10 +176,81 @@ export function ECJYThemeProvider({
 }: ECJYThemeProviderProps) {
   const isEnabled = FEATURE_FLAG && !disabled;
 
+  // Density state (synced with localStorage)
+  const [density, setDensityState] = useState<DensityMode>(() => {
+    if (typeof window === 'undefined') return 'comfortable';
+    const stored = localStorage.getItem('ecjy-density-mode');
+    if (stored && (stored === 'comfortable' || stored === 'compact' || stored === 'dense')) {
+      return stored as DensityMode;
+    }
+    return 'comfortable';
+  });
+
+  const setDensity = useCallback((newDensity: DensityMode) => {
+    setDensityState(newDensity);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ecjy-density-mode', newDensity);
+    }
+  }, []);
+
+  const { rowHeight, multiplier } = DENSITY_CONFIG[density];
+
+  // Apply density CSS variable
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--ecjy-density-multiplier', String(multiplier));
+    }
+  }, [multiplier]);
+
+  // Feature flag state
+  const [flagsCache, setFlagsCache] = useState<Record<string, boolean>>({});
+  
+  useEffect(() => {
+    const initialFlags: Record<string, boolean> = {};
+    getAllKnownFlags().forEach(flag => {
+      initialFlags[flag] = resolveFlag(flag);
+    });
+    setFlagsCache(initialFlags);
+  }, []);
+
+  const featureFlagHelpers = useMemo<FeatureFlagContextValue>(() => ({
+    isEnabled: (flag: string) => resolveFlag(flag),
+    allFlags: flagsCache,
+  }), [flagsCache]);
+
   const mergedTokens = useMemo<DesignTokens>(() => {
     if (!tokensOverride) return tokens;
-    return deepMerge(tokens, tokensOverride);
+    return deepMerge<DesignTokens>(tokens, tokensOverride);
   }, [tokensOverride]);
+
+// Build MUI shadows array (exactly 25 elements)
+  const muiShadows = useMemo<Shadows>(() => [
+    'none',
+    mergedTokens.shadows.xs,
+    mergedTokens.shadows.sm,
+    mergedTokens.shadows.md,
+    mergedTokens.shadows.md,
+    mergedTokens.shadows.lg,
+    mergedTokens.shadows.lg,
+    mergedTokens.shadows.xl,
+    mergedTokens.shadows.xl,
+    mergedTokens.shadows.xl,
+    mergedTokens.shadows.xl,
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+    mergedTokens.shadows['2xl'],
+  ], [mergedTokens]);
 
   const muiTheme = useMemo(() => {
     return createTheme({
@@ -79,34 +277,7 @@ export function ECJYThemeProvider({
       shape: {
         borderRadius: parseInt(mergedTokens.radii.md, 10),
       },
-      shadows: [
-        mergedTokens.shadows.none,
-        mergedTokens.shadows.xs,
-        mergedTokens.shadows.sm,
-        mergedTokens.shadows.md,
-        mergedTokens.shadows.md,
-        mergedTokens.shadows.lg,
-        mergedTokens.shadows.lg,
-        mergedTokens.shadows.xl,
-        mergedTokens.shadows.xl,
-        mergedTokens.shadows.xl,
-        mergedTokens.shadows.xl,
-        mergedTokens.shadows.xl,
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-        mergedTokens.shadows['2xl'],
-      ] as Theme['shadows'],
+      shadows: muiShadows,
       transitions: {
         duration: {
           shortest: parseInt(mergedTokens.motion.durations.fast, 10),
@@ -121,7 +292,7 @@ export function ECJYThemeProvider({
           easeInOut: mergedTokens.motion.easings.standard,
           easeOut: mergedTokens.motion.easings.decelerate,
           easeIn: mergedTokens.motion.easings.emphasize,
-          sharp: mergedTokens.motion.easings.emphasize,
+          sharp: mergedTokens.motion.easings.sharp,
         },
       },
       components: {
@@ -129,12 +300,12 @@ export function ECJYThemeProvider({
           styleOverrides: {
             ':root': {
               ...Object.fromEntries(
-                Object.entries(flattenTokensForCSS(mergedTokens)).map(([k, v]) => [`--ecjy-${k}`, v])
+                Object.entries(flattenTokensForCSS(mergedTokens as unknown as Record<string, unknown>)).map(([k, v]) => [`--ecjy-${k}`, v])
               ),
             },
             '[data-theme="dark"]': {
               ...Object.fromEntries(
-                Object.entries(flattenTokensForCSS(mergedTokens)).map(([k, v]) => [`--ecjy-${k}`, v])
+                Object.entries(flattenTokensForCSS(mergedTokens as unknown as Record<string, unknown>)).map(([k, v]) => [`--ecjy-${k}`, v])
               ),
             },
             '*': {
@@ -149,29 +320,6 @@ export function ECJYThemeProvider({
               fontFamily: mergedTokens.typography.fontFamilies.body,
               lineHeight: mergedTokens.typography.lineHeights.normal,
             },
-            '@font-face': [
-              {
-                fontFamily: 'Space Grotesk',
-                fontStyle: 'normal',
-                fontWeight: '300 700',
-                fontDisplay: 'swap',
-                src: 'local("Space Grotesk"), url("https://fonts.gstatic.com/s/spacegrotesk/v22/VdGSAYsXIlj5Pjyf0VnV1eE.woff2") format("woff2")',
-              },
-              {
-                fontFamily: 'JetBrains Mono',
-                fontStyle: 'normal',
-                fontWeight: '400 700',
-                fontDisplay: 'swap',
-                src: 'local("JetBrains Mono"), url("https://fonts.gstatic.com/s/jetbrainsmono/v23/tDbD2o-flEEny0FZhsf21-TZTZTZ.woff2") format("woff2")',
-              },
-              {
-                fontFamily: 'Inter',
-                fontStyle: 'normal',
-                fontWeight: '400 700',
-                fontDisplay: 'swap',
-                src: 'local("Inter"), url("https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2") format("woff2")',
-              },
-            ],
           },
         },
       },
@@ -194,28 +342,43 @@ export function ECJYThemeProvider({
     };
   }, [isEnabled, mergedTokens]);
 
-  const contextValue = useMemo<ECJYThemeContextValue>(() => ({
+  const themeContextValue = useMemo<ECJYThemeContextValue>(() => ({
     tokens: mergedTokens,
     semanticColors,
     isEnabled,
     theme: muiTheme,
   }), [mergedTokens, isEnabled, muiTheme]);
 
+  const densityContextValue = useMemo<DensityContextValue>(() => ({
+    density,
+    setDensity,
+    rowHeight,
+    multiplier,
+  }), [density, setDensity, rowHeight, multiplier]);
+
   if (!isEnabled) {
     // When disabled, render children without ECJY theming but still provide context
     return (
-      <ECJYThemeContext.Provider value={contextValue}>
-        {children}
+      <ECJYThemeContext.Provider value={themeContextValue}>
+        <DensityContext.Provider value={densityContextValue}>
+          <FeatureFlagContext.Provider value={featureFlagHelpers}>
+            {children}
+          </FeatureFlagContext.Provider>
+        </DensityContext.Provider>
       </ECJYThemeContext.Provider>
     );
   }
 
   return (
-    <ECJYThemeContext.Provider value={contextValue}>
-      <MuiThemeProvider theme={muiTheme}>
-        <CssBaseline />
-        {children}
-      </MuiThemeProvider>
+    <ECJYThemeContext.Provider value={themeContextValue}>
+      <DensityContext.Provider value={densityContextValue}>
+        <FeatureFlagContext.Provider value={featureFlagHelpers}>
+          <MuiThemeProvider theme={muiTheme}>
+            <CssBaseline />
+            {children}
+          </MuiThemeProvider>
+        </FeatureFlagContext.Provider>
+      </DensityContext.Provider>
     </ECJYThemeContext.Provider>
   );
 }
@@ -234,17 +397,18 @@ function flattenTokensForCSS(obj: Record<string, unknown>, prefix: string = ''):
   return result;
 }
 
-function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
+function deepMerge<T extends object>(target: T, source: Partial<T>): T {
+  const result = { ...target } as Record<string, unknown>;
+  const targetRecord = target as Record<string, unknown>;
   for (const [key, value] of Object.entries(source)) {
-    if (value && typeof value === 'object' && !Array.isArray(value) && target[key] && typeof target[key] === 'object') {
-      (result as Record<string, unknown>)[key] = deepMerge(
-        target[key] as Record<string, unknown>,
+    if (value && typeof value === 'object' && !Array.isArray(value) && targetRecord[key] && typeof targetRecord[key] === 'object') {
+      result[key] = deepMerge(
+        targetRecord[key] as Record<string, unknown>,
         value as Record<string, unknown>
       );
     } else {
-      (result as Record<string, unknown>)[key] = value;
+      result[key] = value;
     }
   }
-  return result;
+  return result as T;
 }

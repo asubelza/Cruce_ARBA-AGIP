@@ -3,7 +3,7 @@
  * Generates --ecjy-* CSS variables from tokens for dark mode
  */
 
-import { tokens, DesignTokens, TokenPath } from './tokens';
+import { tokens as defaultTokens, DesignTokens, TokenPath } from './tokens';
 
 const PREFIX = 'ecjy';
 
@@ -27,24 +27,24 @@ function flattenTokens(
   return result;
 }
 
-function generateCSSVars(tokens: DesignTokens, selector: string): string {
-  const flat = flattenTokens(tokens as Record<string, unknown>);
+function generateCSSVars(tokenObj: DesignTokens, selector: string): string {
+  const flat = flattenTokens(tokenObj as unknown as Record<string, unknown>);
   const lines = Object.entries(flat).map(
     ([key, value]) => `  --${PREFIX}-${key}: ${value};`
   );
   return `${selector} {\n${lines.join('\n')}\n}`;
 }
 
-export function generateRootCSSVars(tokens: DesignTokens = tokens): string {
-  return generateCSSVars(tokens, ':root');
+export function generateRootCSSVars(tokenObj: DesignTokens = defaultTokens): string {
+  return generateCSSVars(tokenObj, ':root');
 }
 
-export function generateDarkModeCSSVars(tokens: DesignTokens = tokens): string {
-  return generateCSSVars(tokens, '[data-theme="dark"]');
+export function generateDarkModeCSSVars(tokenObj: DesignTokens = defaultTokens): string {
+  return generateCSSVars(tokenObj, '[data-theme="dark"]');
 }
 
-export function generateAllCSSVars(tokens: DesignTokens = tokens): string {
-  return `${generateRootCSSVars(tokens)}\n\n${generateDarkModeCSSVars(tokens)}`;
+export function generateAllCSSVars(tokenObj: DesignTokens = defaultTokens): string {
+  return `${generateRootCSSVars(tokenObj)}\n\n${generateDarkModeCSSVars(tokenObj)}`;
 }
 
 export function injectCSSVars(cssVars: string = generateAllCSSVars()): void {
@@ -68,7 +68,7 @@ export function removeCSSVars(): void {
 }
 
 export function getCSSVarName(path: TokenPath): string {
-  const flat = flattenTokens(tokens as Record<string, unknown>);
+  const flat = flattenTokens(defaultTokens as unknown as Record<string, unknown>);
   const key = Object.keys(flat).find((k) => {
     const tokenPath = path.replace(/\./g, '-').toLowerCase();
     return k.endsWith(tokenPath) || k === tokenPath;
