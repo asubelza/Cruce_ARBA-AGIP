@@ -9,7 +9,8 @@ import { StagingTable } from './components/StagingTable';
 import { AutoMatchPreview } from './components/AutoMatchPreview';
 import { HeroOpening } from './components/HeroOpening';
 import { StateIndicators } from './components/StateIndicators';
-import { DifferenceDetector } from './components/DifferenceDetector';
+import { ComparisonEngine } from './components/ComparisonEngine';
+import { DataLayers } from './components/DataLayers';
 import { useStats, usePendientes, useAutoMatch, useStaging } from './hooks/useApi';
 import { MatchResult } from './types';
 import { useDensity } from './hooks/useDensity';
@@ -294,15 +295,29 @@ function App() {
               </Paper>
             )}
 
-            {/* Difference Detector - New visual comparison component */}
+            {/* Comparison Engine - New orchestrated comparison view */}
             {(retencion.length > 0 || plataforma.length > 0) && (
-              <DifferenceDetector
+              <ComparisonEngine
                 retencionData={retencion}
                 plataformaData={plataforma}
                 matches={autoMatchPreview}
+                confirmedMatches={[]} // TODO: fetch from backend
+                onFilterChange={handleFiltersChange}
+                onExport={(data) => {
+                  // TODO: implement CSV download
+                  console.log('Export data:', data);
+                }}
+              />
+            )}
+
+            {/* Data Layers - Layered visualization */}
+            {(retencion.length > 0 || plataforma.length > 0) && (
+              <DataLayers
+                retencionData={retencion}
+                plataformaData={plataforma}
+                matches={autoMatchPreview}
+                confirmedMatches={[]}
                 density={density}
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
               />
             )}
 
