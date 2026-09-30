@@ -4,6 +4,7 @@
 
 export * from './Header';
 export * from './StatsCards';
+export * from './StatsDisplay';
 export * from './FileUpload';
 export * from './DataTable';
 export * from './StagingTable';
