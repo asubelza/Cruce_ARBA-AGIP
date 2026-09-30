@@ -15,3 +15,5 @@ export * from './ComparisonTable';
 export * from './ConnectionLines';
 export * from './ComparisonEngine';
 export * from './DataLayers';
+export * from './DetectionPanel';
+export * from './ValidationWorkspace';
