@@ -1,20 +1,45 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  base: '/cruce/',
+  plugins: [
+    react(),
+    visualizer({
+      filename: 'bundle-analysis.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
+  define: {
+    'import.meta.env.VITE_ECJY_VISUAL_PHASE_1': JSON.stringify(process.env.VITE_ECJY_VISUAL_PHASE_1 === 'true' || process.env.VITE_ECJY_VISUAL_PHASE_1 === '1'),
+  },
   server: {
     host: '0.0.0.0',
     port: 3000,
     watch: {
       usePolling: true,
     },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test-setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    globals: true,
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', '@mui/material', '@mui/icons-material'],
+          charts: ['recharts'],
+          animations: ['framer-motion'],
+          visualization: ['@visx/shape', '@visx/responsive', '@tanstack/react-virtual'],
+        },
       },
     },
+    chunkSizeWarningLimit: 1000,
   },
 })

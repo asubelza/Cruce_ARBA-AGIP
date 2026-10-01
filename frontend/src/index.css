@@ -4,27 +4,131 @@
   font-weight: 400;
 }
 
+/* Self-hosted Fonts - ECJY Visual System */
+/* Note: Place actual .woff2 variable font files in public/fonts/ */
+/* Space Grotesk Variable (300-700) */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-variable.woff2') format('woff2');
+}
+
+/* JetBrains Mono Variable (400-700) */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-variable.woff2') format('woff2');
+}
+
+/* Inter Variable (400-700) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f8f9fa;
 }
 
+/* Density CSS Variable (set by useDensity hook) */
+:root {
+  --ecjy-density-multiplier: 1;
+}
+
+/* Grid Utilities */
+.ecjy-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--ecjy-spacing-md, 16px);
+  padding: var(--ecjy-spacing-lg, 24px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ecjy-grid-item {
+  grid-column: span 12;
+}
+
+@media (min-width: 640px) {
+  .ecjy-grid-item-sm-6 { grid-column: span 6; }
+  .ecjy-grid-item-sm-4 { grid-column: span 4; }
+  .ecjy-grid-item-sm-3 { grid-column: span 3; }
+}
+
+@media (min-width: 768px) {
+  .ecjy-grid-item-md-6 { grid-column: span 6; }
+  .ecjy-grid-item-md-4 { grid-column: span 4; }
+  .ecjy-grid-item-md-3 { grid-column: span 3; }
+}
+
+@media (min-width: 1024px) {
+  .ecjy-grid-item-lg-6 { grid-column: span 6; }
+  .ecjy-grid-item-lg-4 { grid-column: span 4; }
+  .ecjy-grid-item-lg-3 { grid-column: span 3; }
+}
+
+@media (min-width: 1280px) {
+  .ecjy-grid-item-xl-6 { grid-column: span 6; }
+  .ecjy-grid-item-xl-4 { grid-column: span 4; }
+  .ecjy-grid-item-xl-3 { grid-column: span 3; }
+}
+
+/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8f9fa;
+  background: var(--ecjy-colors-surface-bg, #121212);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #dee2e6;
+  background: var(--ecjy-colors-surface-border, #2A2A2A);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #adb5bd;
+  background: var(--ecjy-colors-text-tertiary, #363636);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Density-based row heights (CSS variables for tables) */
+:root {
+  --ecjy-row-height-comfortable: 24px;
+  --ecjy-row-height-compact: 18px;
+  --ecjy-row-height-dense: 14px;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--ecjy-colors-semantic-precision-base, #00D4AA);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --ecjy-colors-surface-border: #FFFFFF;
+  }
 }
