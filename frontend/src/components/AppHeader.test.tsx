@@ -40,7 +40,7 @@ vi.mock('./StateIndicators', () => ({
 
 // Mock DensitySelector to simplify tests
 vi.mock('./DensitySelector', () => ({
-  DensitySelector: ({ density, onChange, size, showLabel }: { density: string; onChange: Function; size?: string; showLabel?: boolean }) => (
+  DensitySelector: ({ density, onChange }: { density: string; onChange: Function }) => (
     <button 
       data-testid="density-selector"
       aria-label="Selector de densidad"

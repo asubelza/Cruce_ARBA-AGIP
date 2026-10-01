@@ -53,3 +53,13 @@ export interface Stats {
   pend_totales: number;
   ok_historicos: number;
 }
+
+export interface ComparisonFilters {
+  cuitSearch: string;
+  periodFrom: string;
+  periodTo: string;
+  amountMin: number;
+  amountMax: number;
+  matchStatus: 'all' | 'sin-cruce' | 'coincide' | 'diferencia' | 'confirmado';
+  amountTolerance: number;
+}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -13,8 +13,6 @@ import {
   DialogContent, 
   DialogActions,
   Chip,
-  LinearProgress,
-  IconButton
 } from '@mui/material';
 import { 
   CloudUpload, 
@@ -22,7 +20,6 @@ import {
   InsertDriveFile, 
   Description,
   Visibility,
-  Close,
   ChevronRight
 } from '@mui/icons-material';
 import { useECJYTokens } from '../theme/ECJYThemeProvider';
@@ -49,7 +46,7 @@ interface FileUploadProps {
 
 type PipelineStage = 'subiendo' | 'detectando' | 'procesando' | 'validando' | 'completado';
 
-const PIPELINE_STAGES: { key: PipelineStage; label: string; icon: React.ElementType }[] = [
+const PIPELINE_STAGES: { key: Exclude<PipelineStage, 'completado'>; label: string; icon: React.ElementType }[] = [
   { key: 'subiendo', label: 'Subiendo', icon: CloudUpload },
   { key: 'detectando', label: 'Detectando hojas', icon: Description },
   { key: 'procesando', label: 'Procesando', icon: InsertDriveFile },
@@ -134,15 +131,15 @@ function PipelineVisualization({
   tokens: ReturnType<typeof useECJYTokens>['tokens'];
 }) {
   const stageOrder = ['subiendo', 'detectando', 'procesando', 'validando'] as const;
-  const currentIndex = stageOrder.indexOf(currentStage);
+  // Handle 'completado' stage - treat as all completed
+  const isAllCompleted = currentStage === 'completado';
 
   return (
     <Box sx={{ mb: 3 }}>
       <Stack direction="row" spacing={1} useFlexGap>
         {PIPELINE_STAGES.map((stage, index) => {
-          const isCompleted = completedStages.includes(stage.key);
-          const isCurrent = stage.key === currentStage;
-          const isFuture = index > currentIndex;
+          const isCompleted = completedStages.includes(stage.key) || isAllCompleted;
+          const isCurrent = !isAllCompleted && stage.key === currentStage;
           
           const Icon = stage.icon;
           const color = isCompleted || isCurrent 
@@ -198,8 +195,8 @@ function PipelineVisualization({
                 variant="caption"
                 style={{
                   fontFamily: tokens.typography.fontFamilies.body,
-                  fontWeight: isCurrent ? 600 : 400,
-                  color: isCurrent ? color : tokens.colors.text.secondary,
+                  fontWeight: isCurrent || isAllCompleted ? 600 : 400,
+                  color: isCurrent || isAllCompleted ? color : tokens.colors.text.secondary,
                   textAlign: 'center',
                 }}
               >
@@ -213,7 +210,7 @@ function PipelineVisualization({
                     right: -8,
                     width: 16,
                     height: 2,
-                    bgcolor: completedStages.includes(stageOrder[index + 1] as PipelineStage) 
+                    bgcolor: (completedStages.includes(stageOrder[index + 1] as PipelineStage) || isAllCompleted)
                       ? tokens.colors.semantic.precision.base 
                       : tokens.colors.surface.border,
                     zIndex: -1,
@@ -330,7 +327,6 @@ export function FileUpload({ onUploadSuccess, onContinue }: FileUploadProps) {
 
   const hasResult = uploadResult !== null;
   const sheetsDetected = uploadResult?.sheets_detected || [];
-  const hasRetencionTypo = sheetsDetected.some(s => s.toUpperCase().includes('RETIENCION'));
   const validationSummary = uploadResult?.validation_summary;
 
   return (
@@ -423,20 +419,23 @@ export function FileUpload({ onUploadSuccess, onContinue }: FileUploadProps) {
                   <Description color="primary" /> Hojas detectadas
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {sheetsDetected.map((sheet, index) => (
-                    <Chip
-                      key={index}
-                      label={sheet}
-                      icon={sheet.toUpperCase().includes('RETIENCION') && (
-                        <Typography variant="caption" style={{ color: tokens.colors.semantic.detection.base, fontWeight: 600 }}>
-                          (typo detectado)
-                        </Typography>
-                      )}
-                      variant="outlined"
-                      size="small"
-                      color={sheet.toUpperCase().includes('RETIENCION') ? 'warning' : 'default'}
-                    />
-                  ))}
+                  {sheetsDetected.map((sheet, index) => {
+                    const isRetencionTypo = sheet.toUpperCase().includes('RETIENCION');
+                    return (
+                      <Chip
+                        key={index}
+                        label={sheet}
+                        icon={isRetencionTypo ? (
+                          <Typography variant="caption" style={{ color: tokens.colors.semantic.detection.base, fontWeight: 600 }}>
+                            (typo detectado)
+                          </Typography>
+                        ) : undefined}
+                        variant="outlined"
+                        size="small"
+                        color={isRetencionTypo ? 'warning' : 'default'}
+                      />
+                    );
+                  })}
                 </Stack>
               </Box>
             )}

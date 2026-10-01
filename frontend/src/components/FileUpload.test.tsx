@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ECJYThemeProvider } from '../theme/ECJYThemeProvider';
 import { FileUpload } from './FileUpload';
@@ -18,7 +18,7 @@ Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
 // Mock fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+vi.stubGlobal('fetch', mockFetch);
 
 const renderFileUpload = (props = {}) => {
   return render(

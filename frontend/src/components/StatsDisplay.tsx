@@ -3,7 +3,6 @@ import { Box, Card, CardContent, Typography, Tooltip, IconButton, Grid } from '@
 import { TrendingUp, TrendingDown, Remove, Info } from '@mui/icons-material';
 import { useECJYTokens } from '../theme/ECJYThemeProvider';
 import { useFeatureFlagEnabled } from '../hooks/useFeatureFlag';
-import { useGrid } from '../hooks/useGrid';
 import { Stats } from '../types';
 
 interface StatMetric {
@@ -217,7 +216,7 @@ function StatCard({
           </Typography>
           {thresholdAlert && (
             <Tooltip title={thresholdAlert} arrow>
-              <IconButton size="small" style={{ mt: 1, color: 'text.tertiary' }}>
+              <IconButton size="small" sx={{ mt: 1, color: 'text.tertiary' }}>
                 <Info fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -231,7 +230,6 @@ function StatCard({
 export function StatsDisplay({ stats, loading, previousStats = null }: StatsDisplayProps) {
   const { tokens } = useECJYTokens();
   const statsEnabled = useFeatureFlagEnabled('STATS_DISPLAY');
-  const { breakpoint } = useGrid();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -253,7 +251,7 @@ export function StatsDisplay({ stats, loading, previousStats = null }: StatsDisp
   const previousValues = [prevRetPendientes, prevPlatPendientes, prevTotalPendientes, prevCrucesConfirmados];
 
   // Always call the animation hooks in the same order (4 metrics = 4 hooks)
-  const animatedValues = currentValues.map((value, index) => 
+  const animatedValues = currentValues.map((value) => 
     useCountUpAnimation(value, 800)
   );
 
