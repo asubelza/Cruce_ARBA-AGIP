@@ -6,6 +6,8 @@ export * from './Header';
 export * from './StatsCards';
 export * from './StatsDisplay';
 export * from './FileUpload';
+export * from './AppHeader';
+export * from './DensitySelector';
 export * from './DataTable';
 export * from './StagingTable';
 export * from './AutoMatchPreview';
