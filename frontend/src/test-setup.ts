@@ -7,8 +7,15 @@ import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import { act } from 'react';
 
+type StorageMock = {
+  getItem: ReturnType<typeof vi.fn>;
+  setItem: ReturnType<typeof vi.fn>;
+  removeItem: ReturnType<typeof vi.fn>;
+  clear: ReturnType<typeof vi.fn>;
+};
+
 // Mock localStorage
-const localStorageMock = {
+const localStorageMock: StorageMock = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
@@ -36,14 +43,15 @@ Object.defineProperty(globalThis, 'matchMedia', {
 });
 
 // Mock ResizeObserver
-globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock scrollTo
 globalThis.scrollTo = vi.fn();
 
 // Make act available globally
-(globalThis as any).act = act;
+(globalThis as unknown as { act: typeof act }).act = act;
